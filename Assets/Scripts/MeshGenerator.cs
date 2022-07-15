@@ -120,6 +120,9 @@ public class MeshGenerator : MonoBehaviour
             case 0:
                 break;
 
+                //test change to check if account change worked
+
+
             // 1 point meshes.
             case 1:
                 MeshFromPoints(square.CenterBottom, square.BottomLeft, square.CenterLeft);
