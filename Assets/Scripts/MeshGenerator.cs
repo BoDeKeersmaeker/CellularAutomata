@@ -120,16 +120,21 @@ public class MeshGenerator : MonoBehaviour
 
     //Main class code. -----
 
-    public SquareGrid MainGrid;
-    public MeshFilter walls;
+    Dictionary<int, List<Triangle>> TriangleDictionary = new Dictionary<int, List<Triangle>>();
+    List<List<int>> Outlines = new List<List<int>>();
     List<Vector3> Vertices = null;
     List<int> Triangles = null;
 
-    Dictionary<int, List<Triangle>> TriangleDictionary = new Dictionary<int, List<Triangle>>();
-
-    List<List<int>> Outlines = new List<List<int>>(); 
     //Using hashset is way faster for contained checks.
     HashSet<int> CheckedVertices = new HashSet<int>();
+
+    [SerializeField]
+    private SquareGrid MainGrid;
+    [SerializeField]
+    private MeshFilter walls;
+
+    [SerializeField, Range(0f, 100f)]
+    private float WallHeight = 5f;
 
     public void generateMesh(int[,] map, float squareSize)
     {
@@ -163,7 +168,6 @@ public class MeshGenerator : MonoBehaviour
         List<Vector3> wallVertices = new List<Vector3>();
         List<int> wallTriangles = new List<int>();
         Mesh wallMesh = new Mesh();
-        float wallHeight = 5f;
 
         foreach(List<int> outline in Outlines)
         {
@@ -172,8 +176,8 @@ public class MeshGenerator : MonoBehaviour
                 int startIndex = wallVertices.Count;
                 wallVertices.Add(Vertices[outline[i]]); // left vertex;
                 wallVertices.Add(Vertices[outline[i + 1]]); // right vertex;
-                wallVertices.Add(Vertices[outline[i]] - Vector3.up * wallHeight); // bottom left vertex;
-                wallVertices.Add(Vertices[outline[i + 1]] - Vector3.up * wallHeight); // bottom right vertex;
+                wallVertices.Add(Vertices[outline[i]] - Vector3.up * WallHeight); // bottom left vertex;
+                wallVertices.Add(Vertices[outline[i + 1]] - Vector3.up * WallHeight); // bottom right vertex;
 
                 //counterclockwise because the walls will be viewed from the inside
                 wallTriangles.Add(startIndex + 0);
