@@ -16,6 +16,49 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    class Room
+    {
+        public List<Coord> Tiles;
+        public List<Coord> EdgeTiles;
+        public List<Room> ConnectedRooms;
+        public int RoomSize;
+
+        public Room()
+        {
+
+        }
+
+        public Room(List<Coord> roomTiles, int[,] map)
+        {
+            Tiles = roomTiles;
+            RoomSize = Tiles.Count;
+            ConnectedRooms = new List<Room>();
+            EdgeTiles = new List<Coord>();
+
+            foreach(Coord tile in Tiles)
+                for(int x = tile.tileX-1; x <= tile.tileX+1; x++)
+                    for(int y = tile.tileY-1; y <= tile.tileY+1; y++)
+                    {
+                        if (x != tile.tileX && y != tile.tileY)
+                            continue;
+
+                        if (map[x, y] == 1)
+                            EdgeTiles.Add(tile);
+                    }
+        }
+
+        public static void ConnectRooms(Room roomA, Room roomB)
+        {
+            roomA.ConnectedRooms.Add(roomB);
+            roomB.ConnectedRooms.Add(roomA);
+        }
+
+        public bool IsConnected(Room otherRoom)
+        {
+            return ConnectedRooms.Contains(otherRoom);
+        }
+    }
+
     [SerializeField]
     private string Seed = "Bo De Keersmaeker";
 
@@ -90,11 +133,85 @@ public class MapGenerator : MonoBehaviour
                     Map[tile.tileX, tile.tileY] = 0;
 
         List<List<Coord>> roomRegions = GetRegions(0);
+        List<Room> survivingRooms = new List<Room>();
 
         foreach (List<Coord> roomRegion in roomRegions)
             if (roomRegion.Count < RoomThresholdSize)
                 foreach (Coord tile in roomRegion)
                     Map[tile.tileX, tile.tileY] = 1;
+            else
+                survivingRooms.Add(new Room(roomRegion, Map));
+
+        ConnectClosestRooms(survivingRooms);
+    }
+
+    void ConnectClosestRooms(List<Room> allRooms)
+    {
+        int smallestDistance = 0;
+
+        Coord closestTileA = new Coord();
+        Coord closestTileB = new Coord();
+
+        Room closestRoomA = new Room();
+        Room closestRoomB = new Room();
+
+        bool possibleConnectionFound = false;
+
+        foreach (Room roomA in allRooms)
+        {
+            possibleConnectionFound = false;
+
+            foreach (Room roomB in allRooms)
+            {
+                if (roomA == roomB)
+                    continue;
+
+                if (roomA.IsConnected(roomB))
+                {
+                    possibleConnectionFound = false;
+                    break;
+                }
+
+                for (int tileIndexA = 0; tileIndexA < roomA.EdgeTiles.Count; tileIndexA++)
+                    for (int tileIndexB = 0; tileIndexB < roomB.EdgeTiles.Count; tileIndexB++)
+                    {
+                        Coord tileA = roomA.EdgeTiles[tileIndexA];
+                        Coord tileB = roomB.EdgeTiles[tileIndexB];
+
+                        int distanceBetweenRooms = (int)(Mathf.Pow(tileA.tileX - tileB.tileX, 2) + Mathf.Pow(tileA.tileY - tileB.tileY, 2));
+
+                        if(distanceBetweenRooms < smallestDistance || !possibleConnectionFound)
+                        {
+                            smallestDistance = distanceBetweenRooms;
+                            possibleConnectionFound = true;
+
+                            closestTileA = tileA;
+                            closestTileB = tileB;
+
+                            closestRoomA = roomA;
+                            closestRoomB = roomB;
+                        }
+                    }
+            }
+
+            if(possibleConnectionFound)
+            {
+                CreatePassage(closestRoomA, closestRoomB, closestTileA, closestTileB);
+            }
+
+        }
+    }
+
+    void CreatePassage(Room roomA, Room roomB, Coord tileA, Coord tileB)
+    {
+        Room.ConnectRooms(roomA, roomB);
+        Debug.DrawLine(CoordToWorldPoint(tileA), CoordToWorldPoint(tileB), Color.green, 100);
+
+    }
+
+    Vector3 CoordToWorldPoint(Coord tile)
+    {
+        return new Vector3(-Width / 2f + .5f + tile.tileX, 2f, -Height / 2 + .5f + tile.tileY);
     }
 
     List<List<Coord>> GetRegions(int tileType)

@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1590266453033605082}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.191393, y: -4.695905, z: -23.28612}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -48,12 +48,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32104c26fb4d038489f98ed23344e33c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Seed: Bo De Keersmaeker
+  WallThresholdSize: 50
+  RoomThresholdSize: 50
   Width: 128
   Height: 72
-  Seed: Bo De Keersmaeker
-  UseRandomSeed: 0
   RandomFillPercent: 45
   IterationAmount: 5
+  BorderSize: 1
+  UseRandomSeed: 0
 --- !u!114 &6044827500141721595
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67,6 +70,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   walls: {fileID: 6446411476955682508}
+  WallHeight: 5
 --- !u!33 &3647926449449020939
 MeshFilter:
   m_ObjectHideFlags: 0
