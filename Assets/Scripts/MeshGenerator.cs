@@ -383,29 +383,29 @@ public class MeshGenerator : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        //if (MainGrid != null)
-        //{
-        //    for (int x = 0; x < MainGrid.Squares.GetLength(0); x++)
-        //        for (int y = 0; y < MainGrid.Squares.GetLength(1); y++)
-        //        {
-        //            Gizmos.color = (MainGrid.Squares[x, y].TopLeft.Active) ? Color.black : Color.white;
-        //            Gizmos.DrawCube(MainGrid.Squares[x, y].TopLeft.Position, Vector3.one * 0.4f);
+        //if (MainGrid == null)
+        //    return;
 
-        //            Gizmos.color = (MainGrid.Squares[x, y].TopRight.Active) ? Color.black : Color.white;
-        //            Gizmos.DrawCube(MainGrid.Squares[x, y].TopRight.Position, Vector3.one * 0.4f);
+        //for (int x = 0; x < MainGrid.Squares.GetLength(0); x++)
+        //    for (int y = 0; y < MainGrid.Squares.GetLength(1); y++)
+        //    {
+        //        Gizmos.color = (MainGrid.Squares[x, y].TopLeft.Active) ? Color.black : Color.white;
+        //        Gizmos.DrawCube(MainGrid.Squares[x, y].TopLeft.Position, Vector3.one * 0.4f);
 
-        //            Gizmos.color = (MainGrid.Squares[x, y].BottomRight.Active) ? Color.black : Color.white;
-        //            Gizmos.DrawCube(MainGrid.Squares[x, y].BottomRight.Position, Vector3.one * 0.4f);
+        //        Gizmos.color = (MainGrid.Squares[x, y].TopRight.Active) ? Color.black : Color.white;
+        //        Gizmos.DrawCube(MainGrid.Squares[x, y].TopRight.Position, Vector3.one * 0.4f);
 
-        //            Gizmos.color = (MainGrid.Squares[x, y].BottomLeft.Active) ? Color.black : Color.white;
-        //            Gizmos.DrawCube(MainGrid.Squares[x, y].BottomLeft.Position, Vector3.one * 0.4f);
+        //        Gizmos.color = (MainGrid.Squares[x, y].BottomRight.Active) ? Color.black : Color.white;
+        //        Gizmos.DrawCube(MainGrid.Squares[x, y].BottomRight.Position, Vector3.one * 0.4f);
 
-        //            Gizmos.color = Color.grey;
-        //            Gizmos.DrawCube(MainGrid.Squares[x, y].CenterTop.Position, Vector3.one * 0.15f);
-        //            Gizmos.DrawCube(MainGrid.Squares[x, y].CenterRight.Position, Vector3.one * 0.15f);
-        //            Gizmos.DrawCube(MainGrid.Squares[x, y].CenterBottom.Position, Vector3.one * 0.15f);
-        //            Gizmos.DrawCube(MainGrid.Squares[x, y].CenterLeft.Position, Vector3.one * 0.15f);
-        //        }
-        //}
+        //        Gizmos.color = (MainGrid.Squares[x, y].BottomLeft.Active) ? Color.black : Color.white;
+        //        Gizmos.DrawCube(MainGrid.Squares[x, y].BottomLeft.Position, Vector3.one * 0.4f);
+
+        //        Gizmos.color = Color.grey;
+        //        Gizmos.DrawCube(MainGrid.Squares[x, y].CenterTop.Position, Vector3.one * 0.15f);
+        //        Gizmos.DrawCube(MainGrid.Squares[x, y].CenterRight.Position, Vector3.one * 0.15f);
+        //        Gizmos.DrawCube(MainGrid.Squares[x, y].CenterBottom.Position, Vector3.one * 0.15f);
+        //        Gizmos.DrawCube(MainGrid.Squares[x, y].CenterLeft.Position, Vector3.one * 0.15f);
+        //    }
     }
 }

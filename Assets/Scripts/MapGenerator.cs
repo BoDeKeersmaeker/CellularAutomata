@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -16,12 +17,14 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    class Room
+    class Room : IComparable<Room> 
     {
         public List<Coord> Tiles;
         public List<Coord> EdgeTiles;
         public List<Room> ConnectedRooms;
         public int RoomSize;
+        public bool IsAccessibleFromMainRoom;
+        public bool IsMainRoom;
 
         public Room()
         {
@@ -47,8 +50,23 @@ public class MapGenerator : MonoBehaviour
                     }
         }
 
+        public void SetAccessibleFromMainRoom()
+        {
+            if (IsAccessibleFromMainRoom)
+                return;
+
+            IsAccessibleFromMainRoom = true;
+            foreach(Room connectedRoom in ConnectedRooms)
+                connectedRoom.SetAccessibleFromMainRoom();
+        }
+
         public static void ConnectRooms(Room roomA, Room roomB)
         {
+            if (roomA.IsAccessibleFromMainRoom)
+                roomB.SetAccessibleFromMainRoom();
+            else if (roomB.IsAccessibleFromMainRoom)
+                roomA.SetAccessibleFromMainRoom();
+
             roomA.ConnectedRooms.Add(roomB);
             roomB.ConnectedRooms.Add(roomA);
         }
@@ -56,6 +74,11 @@ public class MapGenerator : MonoBehaviour
         public bool IsConnected(Room otherRoom)
         {
             return ConnectedRooms.Contains(otherRoom);
+        }
+
+        public int CompareTo(Room otherRoom)
+        {
+            return otherRoom.RoomSize.CompareTo(RoomSize);
         }
     }
 
@@ -80,9 +103,14 @@ public class MapGenerator : MonoBehaviour
 
     [SerializeField]
     private bool UseRandomSeed = false;
+    [SerializeField]
+    private bool DrawDebug = false;
 
     private int[,] Map;
     private int[,] NewMap;
+
+    //debug variables.
+    List<Tuple<Coord, Coord>> DebugLines = new List<Tuple<Coord, Coord>>();
 
     private void Start()
     {
@@ -99,6 +127,7 @@ public class MapGenerator : MonoBehaviour
 
     private void GenerateMap()
     {
+        DebugLines.Clear();
         Map = new int[Width, Height];
         NewMap = new int[Width, Height];
         RandomFillMap();
@@ -113,7 +142,7 @@ public class MapGenerator : MonoBehaviour
         for (int x = 0; x < borderedMap.GetLength(0); x++)
             for (int y = 0; y < borderedMap.GetLength(1); y++)
             {
-                if(x >= BorderSize && x < Width + BorderSize && y >= BorderSize && y < Height + BorderSize)
+                if (x >= BorderSize && x < Width + BorderSize && y >= BorderSize && y < Height + BorderSize)
                     borderedMap[x, y] = Map[x - BorderSize, y - BorderSize];
                 else
                     borderedMap[x, y] = 1;
@@ -142,11 +171,32 @@ public class MapGenerator : MonoBehaviour
             else
                 survivingRooms.Add(new Room(roomRegion, Map));
 
+        survivingRooms.Sort();
+        survivingRooms[0].IsMainRoom = true;
+        survivingRooms[0].IsAccessibleFromMainRoom = true;
+
         ConnectClosestRooms(survivingRooms);
     }
 
-    void ConnectClosestRooms(List<Room> allRooms)
+    void ConnectClosestRooms(List<Room> allRooms, bool forceAccessibilityFromMainRoom = false)
     {
+        List<Room> roomListA = new List<Room>();
+        List<Room> roomListB = new List<Room>();
+
+        if (forceAccessibilityFromMainRoom)
+        {
+            foreach (Room room in allRooms)
+                if (room.IsAccessibleFromMainRoom)
+                    roomListB.Add(room);
+                else
+                    roomListA.Add(room);
+        }
+        else
+        {
+            roomListA = allRooms;
+            roomListB = allRooms;
+        }
+
         int smallestDistance = 0;
 
         Coord closestTileA = new Coord();
@@ -157,20 +207,19 @@ public class MapGenerator : MonoBehaviour
 
         bool possibleConnectionFound = false;
 
-        foreach (Room roomA in allRooms)
+        foreach (Room roomA in roomListA)
         {
-            possibleConnectionFound = false;
-
-            foreach (Room roomB in allRooms)
+            if (!forceAccessibilityFromMainRoom)
             {
-                if (roomA == roomB)
+                possibleConnectionFound = false;
+                if (roomA.ConnectedRooms.Count > 0)
                     continue;
+            }
 
-                if (roomA.IsConnected(roomB))
-                {
-                    possibleConnectionFound = false;
-                    break;
-                }
+            foreach (Room roomB in roomListB)
+            {
+                if (roomA == roomB || roomA.IsConnected(roomB))
+                    continue;
 
                 for (int tileIndexA = 0; tileIndexA < roomA.EdgeTiles.Count; tileIndexA++)
                     for (int tileIndexB = 0; tileIndexB < roomB.EdgeTiles.Count; tileIndexB++)
@@ -194,24 +243,28 @@ public class MapGenerator : MonoBehaviour
                     }
             }
 
-            if(possibleConnectionFound)
-            {
+            if(possibleConnectionFound && !forceAccessibilityFromMainRoom)
                 CreatePassage(closestRoomA, closestRoomB, closestTileA, closestTileB);
-            }
-
         }
+        if (possibleConnectionFound && forceAccessibilityFromMainRoom)
+        {
+            CreatePassage(closestRoomA, closestRoomB, closestTileA, closestTileB);
+            ConnectClosestRooms(allRooms, true);
+        }
+
+        if (!forceAccessibilityFromMainRoom)
+            ConnectClosestRooms(allRooms, true);
     }
 
     void CreatePassage(Room roomA, Room roomB, Coord tileA, Coord tileB)
     {
         Room.ConnectRooms(roomA, roomB);
-        Debug.DrawLine(CoordToWorldPoint(tileA), CoordToWorldPoint(tileB), Color.green, 100);
-
+        DebugLines.Add(new Tuple<Coord, Coord>(tileA, tileB));
     }
 
     Vector3 CoordToWorldPoint(Coord tile)
     {
-        return new Vector3(-Width / 2f + .5f + tile.tileX, 2f, -Height / 2 + .5f + tile.tileY);
+        return new Vector3(-Width / 2f + .5f + tile.tileX, .1f, -Height / 2 + .5f + tile.tileY);
     }
 
     List<List<Coord>> GetRegions(int tileType)
@@ -330,7 +383,7 @@ public class MapGenerator : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        //if(Map != null)
+        //if (Map != null)
         //    for (int x = 0; x < Width; x++)
         //    {
         //        for (int y = 0; y < Height; y++)
@@ -340,5 +393,14 @@ public class MapGenerator : MonoBehaviour
         //            Gizmos.DrawCube(pos, Vector3.one);
         //        }
         //    }
+
+        if (DrawDebug)
+        {
+            foreach (Tuple<Coord, Coord> debugLine in DebugLines)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawLine(CoordToWorldPoint(debugLine.Item1), CoordToWorldPoint(debugLine.Item2));
+            }
+        }
     }
 }
