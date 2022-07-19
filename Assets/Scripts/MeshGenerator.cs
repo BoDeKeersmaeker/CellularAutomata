@@ -129,10 +129,15 @@ public class MeshGenerator : MonoBehaviour
     [SerializeField]
     private SquareGrid MainGrid;
     [SerializeField]
-    private MeshFilter walls;
+    private MeshFilter Walls;
+    [SerializeField]
+    private MeshFilter Cave;
 
     [SerializeField, Range(0f, 100f)]
     private float WallHeight = 5f;
+
+    [SerializeField, Range(1, 1000)]
+    int TileAmount = 10;
 
     public void generateMesh(int[,] map, float squareSize)
     {
@@ -150,11 +155,20 @@ public class MeshGenerator : MonoBehaviour
                 TriangulateSquare(MainGrid.Squares[x, y]);
 
         Mesh mesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = mesh;
+        Cave.mesh = mesh;
 
         mesh.vertices = Vertices.ToArray();
         mesh.triangles = Triangles.ToArray();
         mesh.RecalculateNormals();
+
+        Vector2[] uvs = new Vector2[Vertices.Count];
+        for(int i =0; i< Vertices.Count; i++)
+        {
+            float percentX = Mathf.InverseLerp((-map.GetLength(0) / 2) * squareSize, (map.GetLength(0) / 2) * squareSize, Vertices[i].x) * TileAmount;
+            float percentY = Mathf.InverseLerp((-map.GetLength(0) / 2) * squareSize, (map.GetLength(0) / 2) * squareSize, Vertices[i].z) * TileAmount;
+            uvs[i] = new Vector2(percentX, percentY);
+        }
+        mesh.uv = uvs;
 
         CreateWallMesh();
     }
@@ -190,7 +204,10 @@ public class MeshGenerator : MonoBehaviour
 
         wallMesh.vertices = wallVertices.ToArray();
         wallMesh.triangles = wallTriangles.ToArray();
-        walls.mesh = wallMesh;
+        Walls.mesh = wallMesh;
+
+        MeshCollider wallCollider = Walls.gameObject.AddComponent<MeshCollider>();
+        wallCollider.sharedMesh = wallMesh;
     }
 
     private void TriangulateSquare(Square square)
