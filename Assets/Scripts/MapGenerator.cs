@@ -100,6 +100,8 @@ public class MapGenerator : MonoBehaviour
     private int IterationAmount = 5;
     [SerializeField, Range(1, 1000)]
     private int BorderSize = 1;
+    [SerializeField, Range(1, 100)]
+    private int PassageRadius = 1;
 
     [SerializeField]
     private bool UseRandomSeed = false;
@@ -152,7 +154,7 @@ public class MapGenerator : MonoBehaviour
         meshGenerator.generateMesh(borderedMap, 1f);
     }
 
-    void ProcessMap()
+    private void ProcessMap()
     {
         List<List<Coord>> wallRegions = GetRegions(1);
 
@@ -178,7 +180,7 @@ public class MapGenerator : MonoBehaviour
         ConnectClosestRooms(survivingRooms);
     }
 
-    void ConnectClosestRooms(List<Room> allRooms, bool forceAccessibilityFromMainRoom = false)
+    private void ConnectClosestRooms(List<Room> allRooms, bool forceAccessibilityFromMainRoom = false)
     {
         List<Room> roomListA = new List<Room>();
         List<Room> roomListB = new List<Room>();
@@ -256,18 +258,95 @@ public class MapGenerator : MonoBehaviour
             ConnectClosestRooms(allRooms, true);
     }
 
-    void CreatePassage(Room roomA, Room roomB, Coord tileA, Coord tileB)
+    private void CreatePassage(Room roomA, Room roomB, Coord tileA, Coord tileB)
     {
         Room.ConnectRooms(roomA, roomB);
         DebugLines.Add(new Tuple<Coord, Coord>(tileA, tileB));
+
+        List<Coord> line = GetLine(tileA, tileB);
+        foreach (Coord temp in line)
+            DrawCirlce(temp, PassageRadius);
     }
 
-    Vector3 CoordToWorldPoint(Coord tile)
+    private void DrawCirlce(Coord temp, int radius)
+    {
+        for (int x = -radius; x < radius; x++)
+            for (int y = -radius; y < radius; y++)
+                if (x * x + y * y <= radius * radius)
+                {
+                    int tempX = temp.tileX + x;
+                    int tempY = temp.tileY + y;
+
+                    if (!IsInMapRange(tempX, tempY))
+                        continue;
+
+                    Map[tempX, tempY] = 0;
+                }
+    }
+
+    //Algorithm that checks all tiles crossed by the line.
+    private List<Coord> GetLine(Coord start, Coord end)
+    {
+        List<Coord> line = new List<Coord>();
+        int x = start.tileX;
+        int y = start.tileY;
+
+        int dx = end.tileX - start.tileX;
+        int dy = end.tileY - start.tileY;
+
+        bool inverted = false;
+
+        int step = Math.Sign(dx);
+        int gradientStep = Math.Sign(dy);
+
+        int longest = Mathf.Abs(dx);
+        int shortest = Mathf.Abs(dy);
+
+        //longest and shortest because in the case that dy is longer than dx the algorithm would break.
+        if (longest < shortest)
+        {
+            inverted = true;
+            longest = Mathf.Abs(dy);
+            shortest = Mathf.Abs(dx);
+
+            step = Math.Sign(dy);
+            gradientStep = Math.Sign(dx);
+        }
+
+        int gradinetAccumulation = longest / 2;
+
+        for(int i =0; i < longest; i++)
+        {
+            line.Add(new Coord(x, y));
+
+            if (inverted)
+                y += step;
+            else
+                x += step;
+
+            gradinetAccumulation += shortest;
+
+            if (gradinetAccumulation >= longest)
+            {
+                if (inverted)
+                    x += gradientStep;
+                else
+                    y += gradientStep;
+
+                gradinetAccumulation -= longest;
+            }
+        }
+
+
+        return line;
+    }
+
+    private Vector3 CoordToWorldPoint(Coord tile)
     {
         return new Vector3(-Width / 2f + .5f + tile.tileX, .1f, -Height / 2 + .5f + tile.tileY);
     }
 
-    List<List<Coord>> GetRegions(int tileType)
+    private List<List<Coord>> GetRegions(int tileType)
     {
         List<List<Coord>> regions = new List<List<Coord>>();
         int[,] mapFlags = new int[Width, Height];
@@ -288,7 +367,7 @@ public class MapGenerator : MonoBehaviour
         return regions;
     }
 
-    List<Coord> GetRegionTiles(int startX, int startY)
+    private List<Coord> GetRegionTiles(int startX, int startY)
     {
         List<Coord> tiles = new List<Coord>();
         int[,] mapFlags = new int[Width, Height];
@@ -376,7 +455,7 @@ public class MapGenerator : MonoBehaviour
         return wallCount;
     }
 
-    bool IsInMapRange(int x, int y)
+    private bool IsInMapRange(int x, int y)
     {
         return(x >= 0 && x < Width && y >= 0 && y < Height);
     }

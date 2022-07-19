@@ -5,7 +5,6 @@ using UnityEngine;
 public class MeshGenerator : MonoBehaviour
 {
     //Extra data structures. -----
-
     struct Triangle
     {
         public int vertexIndexA, vertexIndexB, vertexIndexC;
@@ -34,7 +33,7 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
-    public class SquareGrid
+    private class SquareGrid
     {
         public Square[,] Squares;
 
@@ -62,8 +61,8 @@ public class MeshGenerator : MonoBehaviour
                 }
         }
     }
-        
-    public class Square
+
+    private class Square
     {
         public ControlNode TopLeft, TopRight, BottomLeft, BottomRight;
         public Node CenterTop, CenterRight, CenterBottom, CenterLeft;
@@ -92,7 +91,7 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
-    public class Node
+    private class Node
     {
         public Vector3 Position;
         public int VertexIndex = -1;
@@ -103,7 +102,7 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
-    public class ControlNode : Node
+    private class ControlNode : Node
     {
         public bool Active;
         public Node Above;
@@ -119,14 +118,13 @@ public class MeshGenerator : MonoBehaviour
     }
 
     //Main class code. -----
-
-    Dictionary<int, List<Triangle>> TriangleDictionary = new Dictionary<int, List<Triangle>>();
-    List<List<int>> Outlines = new List<List<int>>();
-    List<Vector3> Vertices = null;
-    List<int> Triangles = null;
+    private Dictionary<int, List<Triangle>> TriangleDictionary = new Dictionary<int, List<Triangle>>();
+    private List<List<int>> Outlines = new List<List<int>>();
+    private List<Vector3> Vertices = null;
+    private List<int> Triangles = null;
 
     //Using hashset is way faster for contained checks.
-    HashSet<int> CheckedVertices = new HashSet<int>();
+    private HashSet<int> CheckedVertices = new HashSet<int>();
 
     [SerializeField]
     private SquareGrid MainGrid;
@@ -161,7 +159,7 @@ public class MeshGenerator : MonoBehaviour
         CreateWallMesh();
     }
 
-    void CreateWallMesh()
+    private void CreateWallMesh()
     {
         CalculateMeshOutlines();
 
@@ -195,7 +193,7 @@ public class MeshGenerator : MonoBehaviour
         walls.mesh = wallMesh;
     }
 
-    void TriangulateSquare(Square square)
+    private void TriangulateSquare(Square square)
     {
         switch (square.configuration)
         {
@@ -265,7 +263,7 @@ public class MeshGenerator : MonoBehaviour
 
     }
 
-    void MeshFromPoints(params Node[] points)
+    private void MeshFromPoints(params Node[] points)
     {
         AssignVertices(points);
 
@@ -279,7 +277,7 @@ public class MeshGenerator : MonoBehaviour
             CreateTriangle(points[0], points[4], points[5]);
     }
 
-    void AssignVertices(Node[] points)
+    private void AssignVertices(Node[] points)
     {
         for(int i = 0; i < points.Length; i++)
         {
@@ -291,7 +289,7 @@ public class MeshGenerator : MonoBehaviour
         }    
     }
 
-    void CreateTriangle(Node a, Node b, Node c)
+    private void CreateTriangle(Node a, Node b, Node c)
     {
         Triangles.Add(a.VertexIndex);
         Triangles.Add(b.VertexIndex);
@@ -303,7 +301,7 @@ public class MeshGenerator : MonoBehaviour
         AddTriangleToDictionary(triangle.vertexIndexC, triangle);
     }
 
-    void AddTriangleToDictionary(int vertexIndexKey, Triangle triangle)
+    private void AddTriangleToDictionary(int vertexIndexKey, Triangle triangle)
     {
         if (TriangleDictionary.ContainsKey(vertexIndexKey))
             TriangleDictionary[vertexIndexKey].Add(triangle);
@@ -315,7 +313,7 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
-    void CalculateMeshOutlines()
+    private void CalculateMeshOutlines()
     {
         for(int vertexIndex = 0; vertexIndex < Vertices.Count; vertexIndex++)
         {
@@ -336,7 +334,7 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
-    void FollowOutLine(int vertexIndex, int outlineIndex)
+    private void FollowOutLine(int vertexIndex, int outlineIndex)
     {
         Outlines[outlineIndex].Add(vertexIndex);
         CheckedVertices.Add(vertexIndex);
@@ -346,7 +344,7 @@ public class MeshGenerator : MonoBehaviour
             FollowOutLine(nextVertexIndex, outlineIndex);
     }
 
-    int GetConnectdOutLineVertex(int vertexIndex)
+    private int GetConnectdOutLineVertex(int vertexIndex)
     {
         List<Triangle> trianglesWithIndex = TriangleDictionary[vertexIndex];
 
@@ -366,7 +364,7 @@ public class MeshGenerator : MonoBehaviour
         return -1;
     }
 
-    bool IsOutLineEdge(int vertexA, int vertexB)
+    private bool IsOutLineEdge(int vertexA, int vertexB)
     {
         List<Triangle> trianglesA = TriangleDictionary[vertexA];
         int sharedTriangleCount = 0;

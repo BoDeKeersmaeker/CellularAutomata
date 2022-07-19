@@ -57,6 +57,7 @@ MonoBehaviour:
   IterationAmount: 5
   BorderSize: 1
   UseRandomSeed: 0
+  DrawDebug: 0
 --- !u!114 &6044827500141721595
 MonoBehaviour:
   m_ObjectHideFlags: 0
