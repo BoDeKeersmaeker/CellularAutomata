@@ -89,6 +89,8 @@ public class MapGenerator : MonoBehaviour
     private float WallThresholdSize = 50;
     [SerializeField, Range(0, 1000)]
     private float RoomThresholdSize = 50;
+    [SerializeField, Range(1f, 1000f)]
+    private float SquareSize = 1f;
 
     [SerializeField, Range(0, 1000)]
     private int Width = 100;
@@ -151,7 +153,7 @@ public class MapGenerator : MonoBehaviour
             }
 
         MeshGenerator meshGenerator = GetComponent<MeshGenerator>();
-        meshGenerator.generateMesh(borderedMap, 1f);
+        meshGenerator.generateMesh(borderedMap, SquareSize);
     }
 
     private void ProcessMap()
