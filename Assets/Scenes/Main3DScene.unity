@@ -301,74 +301,72 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
---- !u!1 &1433504153
-GameObject:
+--- !u!1001 &6675970847164224474
+PrefabInstance:
   m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1433504155}
-  - component: {fileID: 1433504154}
-  - component: {fileID: 1433504156}
-  m_Layer: 0
-  m_Name: MapGenerator3D
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1433504154
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1433504153}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 11633c1f6f7e7d04780a5887ca9c46d6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Seed: Bo De Keersmaeker
-  WallThresholdSize: 50
-  RoomThresholdSize: 50
-  SquareSize: 1
-  Width: 30
-  Height: 30
-  Depth: 30
-  RandomFillPercent: 53
-  SmoothingFactor: 9
-  IterationAmount: 5
-  BorderSize: 1
-  PassageRadius: 1
-  UseRandomSeed: 0
-  DrawDebug: 1
---- !u!4 &1433504155
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1433504153}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1433504156
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1433504153}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 088ba74bcd3532940a92c1a0441529b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: Width
+      value: 128
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: Height
+      value: 72
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: WallThresholdSize
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058371, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: m_Name
+      value: MapGenerator3D
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}

@@ -116,6 +116,7 @@ public class MapGenerator3D : MonoBehaviour
     [SerializeField]
     private bool DrawDebug = false;
     [SerializeField]
+    private List<GameObject> DebugCubes;
 
     private int[,,] Map;
     private int[,,] NewMap;
@@ -158,10 +159,15 @@ public class MapGenerator3D : MonoBehaviour
         //    }
 
         MeshGenerator3D meshGenerator = GetComponent<MeshGenerator3D>();
-        //meshGenerator.generateMesh(Map, SquareSize);
+        meshGenerator.generateMesh(Map, SquareSize);
 
         if (Map != null && DrawDebug)
         {
+            for (int i = 0; i < DebugCubes.Count; i++)
+                Destroy(DebugCubes[i]);
+
+            DebugCubes.Clear();
+
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.localScale = new Vector3(SquareSize, SquareSize, SquareSize);
             cube.GetComponent<Renderer>().material.color = Color.black;
@@ -170,11 +176,11 @@ public class MapGenerator3D : MonoBehaviour
                 for (int y = 0; y < Height; y++)
                     for (int z = 0; z < Depth; z++)
                     {
-                        Vector3 pos = new Vector3(-Width / 2f + x + .5f, -Depth / 2f + z + .5f, -Height / 2f + y + .5f);
+                        Vector3 pos = new Vector3(-Width / 2f + x + .5f, -Depth + z + .5f, -Height / 2f + y + .5f);
                         cube.transform.position = pos;
 
                         if (Map[x, y, z] == 1)
-                            Instantiate(cube, transform);
+                            DebugCubes.Add(Instantiate(cube, transform));
                     }
 
             Destroy(cube);
@@ -459,7 +465,7 @@ public class MapGenerator3D : MonoBehaviour
                     else if (neighbourWallTiles < SmoothingFactor)
                         NewMap[x, y, z] = 0;
                     else
-                        NewMap[x, y,z] = Map[x, y, z];
+                        NewMap[x, y, z] = Map[x, y, z];
                 }
 
         Map = NewMap;
@@ -473,7 +479,7 @@ public class MapGenerator3D : MonoBehaviour
             for (int neighbourY = gridY - 1; neighbourY <= gridY + 1; neighbourY++)
                 for (int neighbourZ = gridZ - 1; neighbourZ < gridZ + 1; neighbourZ++)
                 {
-                    if (neighbourX == gridX && neighbourY == gridY && neighbourZ== gridZ)
+                    if (neighbourX == gridX && neighbourY == gridY && neighbourZ == gridZ)
                         continue;
 
                     if (!IsInMapRange(neighbourX, neighbourY, neighbourZ))
@@ -511,4 +517,11 @@ public class MapGenerator3D : MonoBehaviour
             }
         }
     }
+
+    ////Might be dangerous
+    //void OnValidate()
+    //{
+    //    if (Application.isPlaying && Application.isEditor)
+    //        GenerateMap();
+    //}
 }
