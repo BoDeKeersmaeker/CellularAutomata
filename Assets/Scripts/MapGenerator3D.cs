@@ -517,11 +517,4 @@ public class MapGenerator3D : MonoBehaviour
             }
         }
     }
-
-    ////Might be dangerous
-    //void OnValidate()
-    //{
-    //    if (Application.isPlaying && Application.isEditor)
-    //        GenerateMap();
-    //}
 }

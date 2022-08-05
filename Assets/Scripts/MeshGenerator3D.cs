@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
 public class MeshGenerator3D : MonoBehaviour
 {
     //Extra data structures. -----
@@ -153,13 +151,8 @@ public class MeshGenerator3D : MonoBehaviour
 
     [SerializeField]
     private CubesGrid MainGrid;
-    //[SerializeField]
-    //private MeshFilter Walls;
     [SerializeField]
     private MeshFilter Cave;
-
-    //[SerializeField, Range(0f, 100f)]
-    //private float WallHeight = 5f;
 
     //[SerializeField, Range(1, 1000)]
     //int TextureScale = 10;
@@ -186,201 +179,43 @@ public class MeshGenerator3D : MonoBehaviour
         mesh.vertices = Vertices.ToArray();
         mesh.triangles = Triangles.ToArray();
         mesh.RecalculateNormals();
-
-        //Vector2[] uvs = new Vector2[Vertices.Count];
-        //for (int i = 0; i < Vertices.Count; i++)
-        //{
-        //    float percentX = Mathf.InverseLerp((-map.GetLength(0) / 2) * squareSize, (map.GetLength(0) / 2) * squareSize, Vertices[i].x) * TextureScale;
-        //    float percentY = Mathf.InverseLerp((-map.GetLength(0) / 2) * squareSize, (map.GetLength(0) / 2) * squareSize, Vertices[i].z) * TextureScale;
-        //    uvs[i] = new Vector2(percentX, percentY);
-        //}
-        //mesh.uv = uvs;
-
-        //CreateWallMesh();
     }
-
-    //private void CreateWallMesh()
-    //{
-    //    CalculateMeshOutlines();
-
-    //    List<Vector3> wallVertices = new List<Vector3>();
-    //    List<int> wallTriangles = new List<int>();
-    //    Mesh wallMesh = new Mesh();
-
-    //    foreach (List<int> outline in Outlines)
-    //    {
-    //        for (int i = 0; i < outline.Count - 1; i++)
-    //        {
-    //            int startIndex = wallVertices.Count;
-    //            wallVertices.Add(Vertices[outline[i]]); // left vertex;
-    //            wallVertices.Add(Vertices[outline[i + 1]]); // right vertex;
-    //            wallVertices.Add(Vertices[outline[i]] - Vector3.up * WallHeight); // bottom left vertex;
-    //            wallVertices.Add(Vertices[outline[i + 1]] - Vector3.up * WallHeight); // bottom right vertex;
-
-    //            //counterclockwise because the walls will be viewed from the inside
-    //            wallTriangles.Add(startIndex + 0);
-    //            wallTriangles.Add(startIndex + 2);
-    //            wallTriangles.Add(startIndex + 3);
-
-    //            wallTriangles.Add(startIndex + 3);
-    //            wallTriangles.Add(startIndex + 1);
-    //            wallTriangles.Add(startIndex + 0);
-    //        }
-    //    }
-
-    //    wallMesh.vertices = wallVertices.ToArray();
-    //    wallMesh.triangles = wallTriangles.ToArray();
-    //    Walls.mesh = wallMesh;
-
-    //    MeshCollider wallCollider = Walls.gameObject.AddComponent<MeshCollider>();
-    //    wallCollider.sharedMesh = wallMesh;
-    //}
 
     private void TriangulateCube(Cube cube)
     {
         int[,] triangulationTable = triangulation;
 
-        List<Node> nodes = new List<Node>();
+        List<int> trianglesIndeces = new List<int>();
 
         for (int i = 0; i < triangulationTable.GetLength(1) - 1; i++)
-            if (triangulationTable[cube.configuration, i] != -1)
-                nodes.Add(cube.Nodes[triangulationTable[cube.configuration, i]]);
-
-        MeshFromPoints(nodes.ToArray());
-
-        //switch (cube.configuration)
-        //{
-        //    case 0:
-        //        break;
-
-            //    // 1 point meshes.
-            //    case 1:
-            //        MeshFromPoints(cube.CenterLeft, cube.CenterBottom, cube.BottomLeft);
-            //        break;
-            //    case 2:
-            //        MeshFromPoints(cube.BottomRight, cube.CenterBottom, cube.CenterRight);
-            //        break;
-            //    case 4:
-            //        MeshFromPoints(cube.TopRight, cube.CenterRight, cube.CenterTop);
-            //        break;
-            //    case 8:
-            //        MeshFromPoints(cube.TopLeft, cube.CenterTop, cube.CenterLeft);
-            //        break;
-
-            //    // 2 point meshes.
-            //    case 3:
-            //        MeshFromPoints(cube.CenterRight, cube.BottomRight, cube.BottomLeft, cube.CenterLeft);
-            //        break;
-            //    case 6:
-            //        MeshFromPoints(cube.CenterTop, cube.TopRight, cube.BottomRight, cube.CenterBottom);
-            //        break;
-            //    case 9:
-            //        MeshFromPoints(cube.TopLeft, cube.CenterTop, cube.CenterBottom, cube.BottomLeft);
-            //        break;
-            //    case 12:
-            //        MeshFromPoints(cube.TopLeft, cube.TopRight, cube.CenterRight, cube.CenterLeft);
-            //        break;
-
-            //    // diagonal meshes.
-            //    case 5:
-            //        MeshFromPoints(cube.CenterTop, cube.TopRight, cube.CenterRight, cube.CenterBottom, cube.BottomLeft, cube.CenterLeft);
-            //        break;
-            //    case 10:
-            //        MeshFromPoints(cube.TopLeft, cube.CenterTop, cube.CenterRight, cube.BottomRight, cube.CenterBottom, cube.CenterLeft);
-            //        break;
-
-            //    // 3 point meshes.
-            //    case 7:
-            //        MeshFromPoints(cube.CenterTop, cube.TopRight, cube.BottomRight, cube.BottomLeft, cube.CenterLeft);
-            //        break;
-            //    case 11:
-            //        MeshFromPoints(cube.TopLeft, cube.CenterTop, cube.CenterRight, cube.BottomRight, cube.BottomLeft);
-            //        break;
-            //    case 13:
-            //        MeshFromPoints(cube.TopLeft, cube.TopRight, cube.CenterRight, cube.CenterBottom, cube.BottomLeft);
-            //        break;
-            //    case 14:
-            //        MeshFromPoints(cube.TopLeft, cube.TopRight, cube.BottomRight, cube.CenterBottom, cube.CenterLeft);
-            //        break;
-
-            //    // 4 point meshes.
-            //    case 15:
-            //        MeshFromPoints(cube.TopLeft, cube.TopRight, cube.BottomRight, cube.BottomLeft);
-
-            //        CheckedVertices.Add(cube.TopLeft.VertexIndex);
-            //        CheckedVertices.Add(cube.TopRight.VertexIndex);
-            //        CheckedVertices.Add(cube.BottomRight.VertexIndex);
-            //        CheckedVertices.Add(cube.BottomLeft.VertexIndex);
-            //        break;
-            //}
-    }
-
-    private void MeshFromPoints(params Node[] points)
-    {
-        AssignVertices(points);
-
-        //if (points.Length >= 3)
-        //    CreateTriangle(points[0], points[1], points[2]);
-        //if (points.Length >= 4)
-        //    CreateTriangle(points[0], points[2], points[3]);
-        //if (points.Length >= 5)
-        //    CreateTriangle(points[0], points[3], points[4]);
-        //if (points.Length >= 6)
-        //    CreateTriangle(points[0], points[4], points[5]);
-
-
-        for(int i = 0; i < points.Length; i++)
-            if ((i + 1) % 3 == 0)
-                CreateTriangle(points[i], points[i - 1], points[i - 2]);
-
-        //
-        ///
-        //
-        //
-        //
-        //
-        //
-
-        //
-
-
-
-
-
-
-        // continue here.
-
-
-        //https://youtu.be/M3iI2l0ltbE?t=156
-
-
-
-
-
-
-
-
-    }
-
-    private void AssignVertices(Node[] points)
-    {
-        for (int i = 0; i < points.Length; i++)
         {
-            if (points[i].VertexIndex == -1)
+            int edgeIndex = triangulationTable[cube.configuration, i];
+            if (edgeIndex != -1)
             {
-                points[i].VertexIndex = Vertices.Count;
-                Vertices.Add(points[i].Position);
+                int indexA = cornerIndexAFromEdge[edgeIndex];
+                int indexB = cornerIndexBFromEdge[edgeIndex];
+
+                Vector3 vertexPos = (cube.ControlNodes[indexA].Position + cube.ControlNodes[indexB].Position) / 2;
+
+                trianglesIndeces.Add(Vertices.Count);
+                Vertices.Add(vertexPos);
+
+                if (trianglesIndeces.Count >= 3)
+                {
+                    CreateTriangle(trianglesIndeces[0], trianglesIndeces[1], trianglesIndeces[2]);
+                    trianglesIndeces.Clear();
+                }
             }
         }
     }
 
-    private void CreateTriangle(Node a, Node b, Node c)
+    private void CreateTriangle(int indexA, int indexB, int indexC)
     {
-        Triangles.Add(a.VertexIndex);
-        Triangles.Add(b.VertexIndex);
-        Triangles.Add(c.VertexIndex);
+        Triangles.Add(indexA);
+        Triangles.Add(indexB);
+        Triangles.Add(indexC);
 
-        Triangle triangle = new Triangle(a.VertexIndex, b.VertexIndex, c.VertexIndex);
+        Triangle triangle = new Triangle(indexA, indexB, indexC);
         AddTriangleToDictionary(triangle.vertexIndexA, triangle);
         AddTriangleToDictionary(triangle.vertexIndexB, triangle);
         AddTriangleToDictionary(triangle.vertexIndexC, triangle);
@@ -397,102 +232,6 @@ public class MeshGenerator3D : MonoBehaviour
             TriangleDictionary.Add(vertexIndexKey, triangleList);
         }
     }
-
-    //private void CalculateMeshOutlines()
-    //{
-    //    for (int vertexIndex = 0; vertexIndex < Vertices.Count; vertexIndex++)
-    //    {
-    //        if (!CheckedVertices.Contains(vertexIndex))
-    //        {
-    //            int newOutLineVertex = GetConnectdOutLineVertex(vertexIndex);
-    //            if (newOutLineVertex != -1)
-    //            {
-    //                CheckedVertices.Add(vertexIndex);
-
-    //                List<int> newOutline = new List<int>();
-    //                newOutline.Add(vertexIndex);
-    //                Outlines.Add(newOutline);
-    //                FollowOutLine(newOutLineVertex, Outlines.Count - 1);
-    //                Outlines[Outlines.Count - 1].Add(vertexIndex);
-    //            }
-    //        }
-    //    }
-    //}
-
-    //private void FollowOutLine(int vertexIndex, int outlineIndex)
-    //{
-    //    Outlines[outlineIndex].Add(vertexIndex);
-    //    CheckedVertices.Add(vertexIndex);
-    //    int nextVertexIndex = GetConnectdOutLineVertex(vertexIndex);
-
-    //    if (nextVertexIndex != -1)
-    //        FollowOutLine(nextVertexIndex, outlineIndex);
-    //}
-
-    //private int GetConnectdOutLineVertex(int vertexIndex)
-    //{
-    //    List<Triangle> trianglesWithIndex = TriangleDictionary[vertexIndex];
-
-    //    for (int i = 0; i < trianglesWithIndex.Count; i++)
-    //    {
-    //        Triangle triangle = trianglesWithIndex[i];
-
-    //        for (int j = 0; j < 3; j++)
-    //        {
-    //            int vertexB = triangle[j];
-
-    //            if (vertexIndex != vertexB && !CheckedVertices.Contains(vertexB) && IsOutLineEdge(vertexIndex, vertexB))
-    //                return vertexB;
-    //        }
-    //    }
-
-    //    return -1;
-    //}
-
-    //private bool IsOutLineEdge(int vertexA, int vertexB)
-    //{
-    //    List<Triangle> trianglesA = TriangleDictionary[vertexA];
-    //    int sharedTriangleCount = 0;
-
-    //    for (int i = 0; i < trianglesA.Count; i++)
-    //        if (trianglesA[i].Contains(vertexB))
-    //        {
-    //            sharedTriangleCount++;
-    //            if (sharedTriangleCount > 1)
-    //                break;
-    //        }
-    //    return sharedTriangleCount == 1;
-    //}
-
-    //private void OnDrawGizmos()
-    //{
-    //    //if (MainGrid == null)
-    //    //    return;
-
-    //    //for (int x = 0; x < MainGrid.Squares.GetLength(0); x++)
-    //    //    for (int y = 0; y < MainGrid.Squares.GetLength(1); y++)
-    //    //    {
-    //    //        Gizmos.color = (MainGrid.Squares[x, y].TopLeft.Active) ? Color.black : Color.white;
-    //    //        Gizmos.DrawCube(MainGrid.Squares[x, y].TopLeft.Position, Vector3.one * 0.4f);
-
-    //    //        Gizmos.color = (MainGrid.Squares[x, y].TopRight.Active) ? Color.black : Color.white;
-    //    //        Gizmos.DrawCube(MainGrid.Squares[x, y].TopRight.Position, Vector3.one * 0.4f);
-
-    //    //        Gizmos.color = (MainGrid.Squares[x, y].BottomRight.Active) ? Color.black : Color.white;
-    //    //        Gizmos.DrawCube(MainGrid.Squares[x, y].BottomRight.Position, Vector3.one * 0.4f);
-
-    //    //        Gizmos.color = (MainGrid.Squares[x, y].BottomLeft.Active) ? Color.black : Color.white;
-    //    //        Gizmos.DrawCube(MainGrid.Squares[x, y].BottomLeft.Position, Vector3.one * 0.4f);
-
-    //    //        Gizmos.color = Color.grey;
-    //    //        Gizmos.DrawCube(MainGrid.Squares[x, y].CenterTop.Position, Vector3.one * 0.15f);
-    //    //        Gizmos.DrawCube(MainGrid.Squares[x, y].CenterRight.Position, Vector3.one * 0.15f);
-    //    //        Gizmos.DrawCube(MainGrid.Squares[x, y].CenterBottom.Position, Vector3.one * 0.15f);
-    //    //        Gizmos.DrawCube(MainGrid.Squares[x, y].CenterLeft.Position, Vector3.one * 0.15f);
-    //    //    }
-    //}
-
-    //---maybe temp stuff---
 
     // Values from http://paulbourke.net/geometry/polygonise/
 
