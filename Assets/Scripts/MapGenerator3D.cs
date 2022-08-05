@@ -147,7 +147,7 @@ public class MapGenerator3D : MonoBehaviour
 
         //ProcessMap();
 
-        int[,] borderedMap = new int[Width + BorderSize * 2, Height + BorderSize * 2];
+        //int[,] borderedMap = new int[Width + BorderSize * 2, Height + BorderSize * 2];
 
         //for (int x = 0; x < borderedMap.GetLength(0); x++)
         //    for (int y = 0; y < borderedMap.GetLength(1); y++)
@@ -169,14 +169,14 @@ public class MapGenerator3D : MonoBehaviour
             DebugCubes.Clear();
 
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.localScale = new Vector3(SquareSize, SquareSize, SquareSize);
+            cube.transform.localScale = new Vector3(SquareSize * 0.1f, SquareSize * 0.1f, SquareSize * 0.1f);
             cube.GetComponent<Renderer>().material.color = Color.black;
 
             for (int x = 0; x < Width; x++)
                 for (int y = 0; y < Height; y++)
                     for (int z = 0; z < Depth; z++)
                     {
-                        Vector3 pos = new Vector3(-Width / 2f + x + .5f, -Depth + z + .5f, -Height / 2f + y + .5f);
+                        Vector3 pos = new Vector3(-Width / 2f + x + .5f, -Depth / 2f + z + .5f, -Height / 2f + y + .5f);
                         cube.transform.position = pos;
 
                         if (Map[x, y, z] == 1)

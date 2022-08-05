@@ -46,19 +46,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11633c1f6f7e7d04780a5887ca9c46d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Seed: 54.28817
+  Seed: Bo De Keersmaeker
   WallThresholdSize: 50
   RoomThresholdSize: 50
   SquareSize: 1
-  Width: 30
-  Height: 30
+  Width: 128
+  Height: 72
   Depth: 30
   RandomFillPercent: 53
   SmoothingFactor: 9
   IterationAmount: 5
   BorderSize: 1
   PassageRadius: 1
-  UseRandomSeed: 1
+  UseRandomSeed: 0
   DrawDebug: 0
   DebugCubes: []
 --- !u!114 &6675970845777058374

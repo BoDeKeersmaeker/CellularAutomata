@@ -202,7 +202,7 @@ public class MeshGenerator3D : MonoBehaviour
 
                 if (trianglesIndeces.Count >= 3)
                 {
-                    CreateTriangle(trianglesIndeces[0], trianglesIndeces[1], trianglesIndeces[2]);
+                    CreateTriangle(trianglesIndeces[2], trianglesIndeces[1], trianglesIndeces[0]);
                     trianglesIndeces.Clear();
                 }
             }
