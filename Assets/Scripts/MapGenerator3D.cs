@@ -19,6 +19,25 @@ public class MapGenerator3D : MonoBehaviour
         }
     }
 
+    struct MapBoundaries
+    { 
+        public int Width;
+        public int Height;
+        public int Depth;
+
+        public MapBoundaries(int width, int height, int depth)
+        {
+            Width = width;
+            Height = height;
+            Depth = depth;
+        }
+
+        public bool IsInMapRange(int x, int y, int z)
+        {
+            return (x >= 0 && x < Width && y >= 0 && y < Height && z >= 0 && z < Depth);
+        }
+    }
+
     class Room : IComparable<Room>
     {
         public List<Coord> Tiles;
@@ -33,7 +52,7 @@ public class MapGenerator3D : MonoBehaviour
 
         }
 
-        public Room(List<Coord> roomTiles, int[,] map)
+        public Room(List<Coord> roomTiles, int[,,] map, MapBoundaries bounds)
         {
             Tiles = roomTiles;
             RoomSize = Tiles.Count;
@@ -43,13 +62,14 @@ public class MapGenerator3D : MonoBehaviour
             foreach (Coord tile in Tiles)
                 for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
                     for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
-                    {
-                        if (x != tile.tileX && y != tile.tileY)
-                            continue;
+                        for (int z = tile.tileZ - 1; z <= tile.tileZ + 1; z++)
+                        {
+                            if (x != tile.tileX && y != tile.tileY && z != tile.tileZ)
+                                continue;
 
-                        if (map[x, y] == 1)
-                            EdgeTiles.Add(tile);
-                    }
+                            if (bounds.IsInMapRange(x, y, z) && map[x, y, z] == 1)
+                                EdgeTiles.Add(tile);
+                        }
         }
 
         public void SetAccessibleFromMainRoom()
@@ -94,6 +114,9 @@ public class MapGenerator3D : MonoBehaviour
     [SerializeField, Range(1f, 1000f)]
     private float SquareSize = 1f;
 
+    private int[,,] Map;
+    private int[,,] NewMap;
+
     [SerializeField, Range(1, 1000)]
     private int Width = 100;
     [SerializeField, Range(1, 1000)]
@@ -113,19 +136,19 @@ public class MapGenerator3D : MonoBehaviour
 
     [SerializeField]
     private bool UseRandomSeed = false;
+
+    //Debug variables.
     [SerializeField]
-    private bool DrawDebug = false;
-    private List<GameObject> DebugCubes;
-
-    private int[,,] Map;
-    private int[,,] NewMap;
-
-    //debug variables.
+    private bool DrawDebugPassages = false;
+    [SerializeField]
+    private bool DrawDebugMesh = false;
+    private List<GameObject> DebugCubes = new List<GameObject>();
     List<Tuple<Coord, Coord>> DebugLines = new List<Tuple<Coord, Coord>>();
 
     private void Start()
     {
         GenerateMap();
+        print("Startup took: " + Time.realtimeSinceStartup.ToString() + " seconds.");
     }
 
     private void Update()
@@ -146,21 +169,10 @@ public class MapGenerator3D : MonoBehaviour
 
         ProcessMap();
 
-        //int[,] borderedMap = new int[Width + BorderSize * 2, Height + BorderSize * 2];
-
-        //for (int x = 0; x < borderedMap.GetLength(0); x++)
-        //    for (int y = 0; y < borderedMap.GetLength(1); y++)
-        //    {
-        //        if (x >= BorderSize && x < Width + BorderSize && y >= BorderSize && y < Height + BorderSize)
-        //            borderedMap[x, y] = Map[x - BorderSize, y - BorderSize];
-        //        else
-        //            borderedMap[x, y] = 1;
-        //    }
-
         MeshGenerator3D meshGenerator = GetComponent<MeshGenerator3D>();
         meshGenerator.generateMesh(Map, SquareSize);
 
-        if (Map != null && DrawDebug)
+        if (Map != null && DrawDebugMesh)
         {
             for (int i = 0; i < DebugCubes.Count; i++)
                 Destroy(DebugCubes[i]);
@@ -198,184 +210,187 @@ public class MapGenerator3D : MonoBehaviour
         List<List<Coord>> roomRegions = GetRegions(0);
         List<Room> survivingRooms = new List<Room>();
 
-        //foreach (List<Coord> roomRegion in roomRegions)
-        //    if (roomRegion.Count < RoomThresholdSize)
-        //        foreach (Coord tile in roomRegion)
-        //            Map[tile.tileX, tile.tileY] = 1;
-        //    else
-        //        survivingRooms.Add(new Room(roomRegion, Map));
+        foreach (List<Coord> roomRegion in roomRegions)
+            if (roomRegion.Count < RoomThresholdSize)
+                foreach (Coord tile in roomRegion)
+                    Map[tile.tileX, tile.tileY, tile.tileZ] = 1;
+            else
+                survivingRooms.Add(new Room(roomRegion, Map, new MapBoundaries(Width, Depth, Height)));
 
-        //survivingRooms.Sort();
-        //survivingRooms[0].IsMainRoom = true;
-        //survivingRooms[0].IsAccessibleFromMainRoom = true;
+        survivingRooms.Sort();
+        survivingRooms[0].IsMainRoom = true;
+        survivingRooms[0].IsAccessibleFromMainRoom = true;
 
-        //ConnectClosestRooms(survivingRooms);
+        ConnectClosestRooms(survivingRooms);
     }
 
     private void ConnectClosestRooms(List<Room> allRooms, bool forceAccessibilityFromMainRoom = false)
     {
-        //List<Room> roomListA = new List<Room>();
-        //List<Room> roomListB = new List<Room>();
+        List<Room> roomListA = new List<Room>();
+        List<Room> roomListB = new List<Room>();
 
-        //if (forceAccessibilityFromMainRoom)
-        //{
-        //    foreach (Room room in allRooms)
-        //        if (room.IsAccessibleFromMainRoom)
-        //            roomListB.Add(room);
-        //        else
-        //            roomListA.Add(room);
-        //}
-        //else
-        //{
-        //    roomListA = allRooms;
-        //    roomListB = allRooms;
-        //}
+        if (forceAccessibilityFromMainRoom)
+        {
+            foreach (Room room in allRooms)
+                if (room.IsAccessibleFromMainRoom)
+                    roomListB.Add(room);
+                else
+                    roomListA.Add(room);
+        }
+        else
+        {
+            roomListA = allRooms;
+            roomListB = allRooms;
+        }
 
-        //int smallestDistance = 0;
+        int smallestDistance = 0;
 
-        //Coord closestTileA = new Coord();
-        //Coord closestTileB = new Coord();
+        Coord closestTileA = new Coord();
+        Coord closestTileB = new Coord();
 
-        //Room closestRoomA = new Room();
-        //Room closestRoomB = new Room();
+        Room closestRoomA = new Room();
+        Room closestRoomB = new Room();
 
-        //bool possibleConnectionFound = false;
+        bool possibleConnectionFound = false;
 
-        //foreach (Room roomA in roomListA)
-        //{
-        //    if (!forceAccessibilityFromMainRoom)
-        //    {
-        //        possibleConnectionFound = false;
-        //        if (roomA.ConnectedRooms.Count > 0)
-        //            continue;
-        //    }
+        foreach (Room roomA in roomListA)
+        {
+            if (!forceAccessibilityFromMainRoom)
+            {
+                possibleConnectionFound = false;
+                if (roomA.ConnectedRooms.Count > 0)
+                    continue;
+            }
 
-        //    foreach (Room roomB in roomListB)
-        //    {
-        //        if (roomA == roomB || roomA.IsConnected(roomB))
-        //            continue;
+            foreach (Room roomB in roomListB)
+            {
+                if (roomA == roomB || roomA.IsConnected(roomB))
+                    continue;
 
-        //        for (int tileIndexA = 0; tileIndexA < roomA.EdgeTiles.Count; tileIndexA++)
-        //            for (int tileIndexB = 0; tileIndexB < roomB.EdgeTiles.Count; tileIndexB++)
-        //            {
-        //                Coord tileA = roomA.EdgeTiles[tileIndexA];
-        //                Coord tileB = roomB.EdgeTiles[tileIndexB];
+                for (int tileIndexA = 0; tileIndexA < roomA.EdgeTiles.Count; tileIndexA++)
+                    for (int tileIndexB = 0; tileIndexB < roomB.EdgeTiles.Count; tileIndexB++)
+                    {
+                        Coord tileA = roomA.EdgeTiles[tileIndexA];
+                        Coord tileB = roomB.EdgeTiles[tileIndexB];
 
-        //                int distanceBetweenRooms = (int)(Mathf.Pow(tileA.tileX - tileB.tileX, 2) + Mathf.Pow(tileA.tileY - tileB.tileY, 2));
+                        int distanceBetweenRooms = (int)Vector3.Distance(new Vector3(tileA.tileX, tileA.tileY, tileA.tileZ), new Vector3(tileB.tileX, tileB.tileY, tileB.tileZ));
 
-        //                if (distanceBetweenRooms < smallestDistance || !possibleConnectionFound)
-        //                {
-        //                    smallestDistance = distanceBetweenRooms;
-        //                    possibleConnectionFound = true;
+                        if (distanceBetweenRooms < smallestDistance || !possibleConnectionFound)
+                        {
+                            smallestDistance = distanceBetweenRooms;
+                            possibleConnectionFound = true;
 
-        //                    closestTileA = tileA;
-        //                    closestTileB = tileB;
+                            closestTileA = tileA;
+                            closestTileB = tileB;
 
-        //                    closestRoomA = roomA;
-        //                    closestRoomB = roomB;
-        //                }
-        //            }
-        //    }
+                            closestRoomA = roomA;
+                            closestRoomB = roomB;
+                        }
+                    }
+            }
 
-        //    if (possibleConnectionFound && !forceAccessibilityFromMainRoom)
-        //        CreatePassage(closestRoomA, closestRoomB, closestTileA, closestTileB);
-        //}
-        //if (possibleConnectionFound && forceAccessibilityFromMainRoom)
-        //{
-        //    CreatePassage(closestRoomA, closestRoomB, closestTileA, closestTileB);
-        //    ConnectClosestRooms(allRooms, true);
-        //}
+            if (possibleConnectionFound && !forceAccessibilityFromMainRoom)
+                CreatePassage(closestRoomA, closestRoomB, closestTileA, closestTileB);
+        }
 
-        //if (!forceAccessibilityFromMainRoom)
-        //    ConnectClosestRooms(allRooms, true);
+        if (possibleConnectionFound && forceAccessibilityFromMainRoom)
+        {
+            CreatePassage(closestRoomA, closestRoomB, closestTileA, closestTileB);
+            ConnectClosestRooms(allRooms, true);
+        }
+
+        if (!forceAccessibilityFromMainRoom)
+            ConnectClosestRooms(allRooms, true);
     }
 
     private void CreatePassage(Room roomA, Room roomB, Coord tileA, Coord tileB)
     {
-        //Room.ConnectRooms(roomA, roomB);
-        //DebugLines.Add(new Tuple<Coord, Coord>(tileA, tileB));
+        Room.ConnectRooms(roomA, roomB);
 
-        //List<Coord> line = GetLine(tileA, tileB);
-        //foreach (Coord temp in line)
-        //    DrawCirlce(temp, PassageRadius);
+        if(DrawDebugPassages)
+            DebugLines.Add(new Tuple<Coord, Coord>(tileA, tileB));
+
+        List<Coord> line = GetLine(tileA, tileB);
+        foreach (Coord temp in line)
+            DrawSphere(temp, PassageRadius);
     }
 
-    private void DrawCirlce(Coord temp, int radius)
+    private void DrawSphere(Coord temp, int radius)
     {
-        //for (int x = -radius; x < radius; x++)
-        //    for (int y = -radius; y < radius; y++)
-        //        if (x * x + y * y <= radius * radius)
-        //        {
-        //            int tempX = temp.tileX + x;
-        //            int tempY = temp.tileY + y;
+        for (int x = -radius; x < radius; x++)
+            for (int y = -radius; y < radius; y++)
+                for (int z = -radius; z < radius; z++)
+                    if (x * x + y * y + z * z <= radius * radius)
+                    {
+                        int tempX = temp.tileX + x;
+                        int tempY = temp.tileY + y;
+                        int tempZ = temp.tileZ + z;
 
-        //            if (!IsInMapRange(tempX, tempY))
-        //                continue;
+                        if (!IsInMapRange(tempX, tempY, tempZ))
+                            continue;
 
-        //            Map[tempX, tempY] = 0;
-        //        }
+                        Map[tempX, tempY, tempZ] = 0;
+                    }
     }
 
-    //Algorithm that checks all tiles crossed by the line.
     private List<Coord> GetLine(Coord start, Coord end)
     {
         List<Coord> line = new List<Coord>();
-        //int x = start.tileX;
-        //int y = start.tileY;
 
-        //int dx = end.tileX - start.tileX;
-        //int dy = end.tileY - start.tileY;
+       float dx = end.tileX - start.tileX;
+        float dy = end.tileY - start.tileY;
+        float dz = end.tileZ - start.tileZ;
 
-        //bool inverted = false;
+        if (dy < dx && dy < dz)
+            foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dy, dx, dz, start.tileY, end.tileY, start.tileX, start.tileZ))
+                line.Add(new Coord(tempCoord.y, tempCoord.x, tempCoord.z));
+        else if (dz < dx && dz < dy)
+            foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dz, dy, dx, start.tileZ, end.tileZ, start.tileY, start.tileX))
+                line.Add(new Coord(tempCoord.z, tempCoord.y, tempCoord.x));
+        else
+            foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dx, dy, dz, start.tileX, end.tileX, start.tileY, start.tileZ))
+                line.Add(new Coord(tempCoord.x, tempCoord.y, tempCoord.z));
 
-        //int step = Math.Sign(dx);
-        //int gradientStep = Math.Sign(dy);
+        return line;
+    }
 
-        //int longest = Mathf.Abs(dx);
-        //int shortest = Mathf.Abs(dy);
+    //Algorithm that checks all tiles crossed by the line.
+    private List<Vector3Int> BresenhamsAlgorithm(float deltaShortest, float deltaLongA, float deltaLongB, int startShort, int endShort, int startLongA, int startLongB)
+    {
+        List<Vector3Int> line = new List<Vector3Int>();
 
-        ////longest and shortest because in the case that dy is longer than dx the algorithm would break.
-        //if (longest < shortest)
-        //{
-        //    inverted = true;
-        //    longest = Mathf.Abs(dy);
-        //    shortest = Mathf.Abs(dx);
+        float deltaErrorY = Mathf.Abs(deltaLongA / deltaShortest);
+        float deltaErrorZ = Mathf.Abs(deltaLongB / deltaShortest);
+        float errorY = 0;
+        float errorZ = 0;
+        int y = startLongA;
+        int z = startLongB;
 
-        //    step = Math.Sign(dy);
-        //    gradientStep = Math.Sign(dx);
-        //}
+        for (int x = endShort; x < startShort; x++)
+        {
+            line.Add(new Vector3Int(x, y, z));
 
-        //int gradinetAccumulation = longest / 2;
+            errorY += deltaErrorY;
 
-        //for (int i = 0; i < longest; i++)
-        //{
-        //    line.Add(new Coord(x, y));
-
-        //    if (inverted)
-        //        y += step;
-        //    else
-        //        x += step;
-
-        //    gradinetAccumulation += shortest;
-
-        //    if (gradinetAccumulation >= longest)
-        //    {
-        //        if (inverted)
-        //            x += gradientStep;
-        //        else
-        //            y += gradientStep;
-
-        //        gradinetAccumulation -= longest;
-        //    }
-        //}
-
+            while (errorY >= 0.5)
+            {
+                y += Math.Sign(deltaLongA);
+                errorY--;
+            }
+            errorZ += deltaErrorZ;
+            while (errorZ >= 0.5)
+            {
+                z += Math.Sign(deltaLongB);
+                errorZ--;
+            }
+        }
 
         return line;
     }
 
     private Vector3 CoordToWorldPoint(Coord tile)
     {
-        return new Vector3(-Width / 2f + .5f + tile.tileX, .1f, -Height / 2 + .5f + tile.tileY);
+        return new Vector3(-Width / 2f + .5f + tile.tileX, -Depth / 2f + .5f + tile.tileZ, -Height / 2 + .5f + tile.tileY);
     }
 
     private List<List<Coord>> GetRegions(int tileType)
@@ -448,7 +463,6 @@ public class MapGenerator3D : MonoBehaviour
                     else
                         Map[x, y, z] = (pseudoRandom.Next(0, 100) < RandomFillPercent) ? 1 : 0;
                 }
-
     }
 
     private void SmoothMap()
@@ -497,17 +511,7 @@ public class MapGenerator3D : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        //if (Map != null)
-        //    for (int x = 0; x < Width; x++)
-        //        for (int y = 0; y < Height; y++)
-        //            for (int z = 0; z < Depth; z++)
-        //            {
-        //                Gizmos.color = (Map[x, y, z] == 1) ? Color.black : Color.white;
-        //                Vector3 pos = new Vector3(-Width / 2f + x + .5f, -Depth / 2f + z + .5f, -Height / 2f + y + .5f);
-        //                Gizmos.DrawCube(pos, Vector3.one);
-        //            }
-
-        if (DrawDebug)
+        if (DrawDebugPassages)
         {
             foreach (Tuple<Coord, Coord> debugLine in DebugLines)
             {

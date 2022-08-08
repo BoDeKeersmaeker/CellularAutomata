@@ -226,14 +226,7 @@ public class MeshGenerator3D : MonoBehaviour
                 }
 
         CreateNewChunk();
-
-        //Mesh mesh = new Mesh();
-        //Cave.mesh = mesh;
-
-        //mesh.vertices = Vertices.ToArray();
-        //mesh.triangles = Triangles.ToArray();
-        //mesh.RecalculateNormals();
-
+        
         foreach (Chunk chunk in Chunks)
             chunk.GenerateMesh();
     }

@@ -310,15 +310,31 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
       propertyPath: Depth
-      value: 100
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
       propertyPath: Width
-      value: 100
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
       propertyPath: Height
-      value: 100
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: DrawDebug
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: DrawDebugMesh
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: PassageRadius
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
+      propertyPath: DrawDebugPassages
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
       propertyPath: m_RootOrder
