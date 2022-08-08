@@ -169,8 +169,20 @@ public class MapGenerator3D : MonoBehaviour
 
         ProcessMap();
 
+        int[,,] borderedMap = new int[Width + BorderSize * 2, Height + BorderSize * 2, Depth + BorderSize * 2];
+
+        for (int x = 0; x < borderedMap.GetLength(0); x++)
+            for (int y = 0; y < borderedMap.GetLength(1); y++)
+                for (int z = 0; z < borderedMap.GetLength(2); z++)
+                {
+                    if (x >= BorderSize && x < Width + BorderSize && y >= BorderSize && y < Height + BorderSize && z >= BorderSize && z < Depth + BorderSize)
+                        borderedMap[x, y, z] = Map[x - BorderSize, y - BorderSize, z - BorderSize];
+                    else
+                        borderedMap[x, y, z] = 1;
+                }
+
         MeshGenerator3D meshGenerator = GetComponent<MeshGenerator3D>();
-        meshGenerator.generateMesh(Map, SquareSize);
+        meshGenerator.generateMesh(borderedMap, SquareSize);
 
         if (Map != null && DrawDebugMesh)
         {
@@ -337,9 +349,11 @@ public class MapGenerator3D : MonoBehaviour
     {
         List<Coord> line = new List<Coord>();
 
-       float dx = end.tileX - start.tileX;
+        float dx = end.tileX - start.tileX;
         float dy = end.tileY - start.tileY;
         float dz = end.tileZ - start.tileZ;
+
+        print("x: " + dx.ToString() + " y: " + dy.ToString() + " z: " + dz.ToString());
 
         if (dy < dx && dy < dz)
             foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dy, dx, dz, start.tileY, end.tileY, start.tileX, start.tileZ))
@@ -371,12 +385,12 @@ public class MapGenerator3D : MonoBehaviour
             line.Add(new Vector3Int(x, y, z));
 
             errorY += deltaErrorY;
-
             while (errorY >= 0.5)
             {
                 y += Math.Sign(deltaLongA);
                 errorY--;
             }
+
             errorZ += deltaErrorZ;
             while (errorZ >= 0.5)
             {

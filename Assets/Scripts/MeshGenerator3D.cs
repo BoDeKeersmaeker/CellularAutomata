@@ -192,8 +192,6 @@ public class MeshGenerator3D : MonoBehaviour
 
     [SerializeField]
     private CubesGrid MainGrid;
-    //[SerializeField]
-    //private MeshFilter Cave;
 
     [SerializeField, Range(3, 65535)]
     private int MaxVecticesPerChunk = 65535;
