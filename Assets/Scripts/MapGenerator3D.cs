@@ -115,7 +115,6 @@ public class MapGenerator3D : MonoBehaviour
     private bool UseRandomSeed = false;
     [SerializeField]
     private bool DrawDebug = false;
-    [SerializeField]
     private List<GameObject> DebugCubes;
 
     private int[,,] Map;
@@ -145,7 +144,7 @@ public class MapGenerator3D : MonoBehaviour
         for (int i = 0; i < IterationAmount; i++)
             SmoothMap();
 
-        //ProcessMap();
+        ProcessMap();
 
         //int[,] borderedMap = new int[Width + BorderSize * 2, Height + BorderSize * 2];
 
@@ -189,15 +188,15 @@ public class MapGenerator3D : MonoBehaviour
 
     private void ProcessMap()
     {
-        //List<List<Coord>> wallRegions = GetRegions(1);
+        List<List<Coord>> wallRegions = GetRegions(1);
 
-        //foreach (List<Coord> wallRegion in wallRegions)
-        //    if (wallRegion.Count < WallThresholdSize)
-        //        foreach (Coord tile in wallRegion)
-        //            Map[tile.tileX, tile.tileY] = 0;
+        foreach (List<Coord> wallRegion in wallRegions)
+            if (wallRegion.Count < WallThresholdSize)
+                foreach (Coord tile in wallRegion)
+                    Map[tile.tileX, tile.tileY, tile.tileZ] = 0;
 
-        //List<List<Coord>> roomRegions = GetRegions(0);
-        //List<Room> survivingRooms = new List<Room>();
+        List<List<Coord>> roomRegions = GetRegions(0);
+        List<Room> survivingRooms = new List<Room>();
 
         //foreach (List<Coord> roomRegion in roomRegions)
         //    if (roomRegion.Count < RoomThresholdSize)
@@ -382,53 +381,53 @@ public class MapGenerator3D : MonoBehaviour
     private List<List<Coord>> GetRegions(int tileType)
     {
         List<List<Coord>> regions = new List<List<Coord>>();
-        //int[,] mapFlags = new int[Width, Height];
+        int[,,] mapFlags = new int[Width, Height, Depth];
 
-        //for (int x = 0; x < Width; x++)
-        //    for (int y = 0; y < Height; y++)
-        //    {
-        //        if (mapFlags[x, y] == 0 && Map[x, y] == tileType)
-        //        {
-        //            List<Coord> newRegion = GetRegionTiles(x, y);
-        //            regions.Add(newRegion);
+        for (int x = 0; x < Width; x++)
+            for (int y = 0; y < Height; y++)
+                for (int z = 0; z < Depth; z++)
+                    if (mapFlags[x, y, z] == 0 && Map[x, y, z] == tileType)
+                    {
+                        List<Coord> newRegion = GetRegionTiles(x, y, z);
+                        regions.Add(newRegion);
 
-        //            foreach (Coord tile in newRegion)
-        //                mapFlags[tile.tileX, tile.tileY] = 1;
-        //        }
-        //    }
+                        foreach (Coord tile in newRegion)
+                            mapFlags[tile.tileX, tile.tileY, tile.tileZ] = 1;
+                    }
 
         return regions;
     }
 
-    private List<Coord> GetRegionTiles(int startX, int startY)
+    private List<Coord> GetRegionTiles(int startX, int startY, int startZ)
     {
         List<Coord> tiles = new List<Coord>();
-        //int[,] mapFlags = new int[Width, Height];
-        //int tileType = Map[startX, startY];
+        int[,,] mapFlags = new int[Width, Height, Depth];
+        int tileType = Map[startX, startY, startZ];
 
-        //Queue<Coord> queue = new Queue<Coord>();
-        //queue.Enqueue(new Coord(startX, startY));
-        //mapFlags[startX, startY] = 1;
+        Queue<Coord> queue = new Queue<Coord>();
+        queue.Enqueue(new Coord(startX, startY, startZ));
+        mapFlags[startX, startY, startZ] = 1;
 
-        //while (queue.Count > 0)
-        //{
-        //    Coord tile = queue.Dequeue();
-        //    tiles.Add(tile);
+        while (queue.Count > 0)
+        {
+            Coord tile = queue.Dequeue();
+            tiles.Add(tile);
 
-        //    for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
-        //        for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
-        //        {
-        //            if (!IsInMapRange(x, y) || (y != tile.tileY && x != tile.tileX))
-        //                continue;
+            for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
+                for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
+                    for (int z = tile.tileZ - 1; z <= tile.tileZ + 1; z++)
+                    {
+                        if (!IsInMapRange(x, y, z) || (y != tile.tileY && x != tile.tileX && z != tile.tileZ))
+                            continue;
 
-        //            if (mapFlags[x, y] == 0 && Map[x, y] == tileType)
-        //            {
-        //                mapFlags[x, y] = 1;
-        //                queue.Enqueue(new Coord(x, y));
-        //            }
+                        if (mapFlags[x, y, z] == 0 && Map[x, y, z] == tileType)
+                        {
+                            mapFlags[x, y, z] = 1;
+                            queue.Enqueue(new Coord(x, y, z));
+                        }
 
-        //        }
-        //}
+                    }
+        }
 
         return tiles;
     }
