@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BresenhamShader: {fileID: 7200000, guid: 4547d75c570000b40b6e5e9303c6455b, type: 3}
+  CellularAutomataShader: {fileID: 7200000, guid: 514a50a4bd7d8f0439a8f50b400371d3, type: 3}
   Seed: Bo De Keersmaeker
   WallThresholdSize: 50
   RoomThresholdSize: 50

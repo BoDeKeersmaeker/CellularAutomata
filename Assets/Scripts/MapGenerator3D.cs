@@ -106,6 +106,8 @@ public class MapGenerator3D : MonoBehaviour
 
     [SerializeField]
     private ComputeShader BresenhamShader = null;
+    [SerializeField]
+    private ComputeShader CellularAutomataShader = null;
 
     [SerializeField]
     private string Seed = "Bo De Keersmaeker";
@@ -165,6 +167,9 @@ public class MapGenerator3D : MonoBehaviour
         DebugLines.Clear();
         Map = new int[Width, Height, Depth];
         NewMap = new int[Width, Height, Depth];
+
+        CellularAutomateUsingShader();
+
         RandomFillMap();
 
         for (int i = 0; i < IterationAmount; i++)
@@ -172,20 +177,8 @@ public class MapGenerator3D : MonoBehaviour
 
         ProcessMap();
 
-        int[,,] borderedMap = new int[Width + BorderSize * 2, Height + BorderSize * 2, Depth + BorderSize * 2];
-
-        for (int x = 0; x < borderedMap.GetLength(0); x++)
-            for (int y = 0; y < borderedMap.GetLength(1); y++)
-                for (int z = 0; z < borderedMap.GetLength(2); z++)
-                {
-                    if (x >= BorderSize && x < Width + BorderSize && y >= BorderSize && y < Height + BorderSize && z >= BorderSize && z < Depth + BorderSize)
-                        borderedMap[x, y, z] = Map[x - BorderSize, y - BorderSize, z - BorderSize];
-                    else
-                        borderedMap[x, y, z] = 1;
-                }
-
         MeshGenerator3D meshGenerator = GetComponent<MeshGenerator3D>();
-        meshGenerator.generateMesh(borderedMap, SquareSize);
+        meshGenerator.generateMesh(GenerateBorderedMap(Map), SquareSize);
 
         if (Map != null && DrawDebugMesh)
         {
@@ -239,7 +232,7 @@ public class MapGenerator3D : MonoBehaviour
         ConnectClosestRooms(survivingRooms);
     }
 
-    private void ConnectClosestRooms(List<Room> allRooms, bool forceAccessibilityFromMainRoom = false)
+    private void ConnectClosestRooms(List<Room>  allRooms, bool forceAccessibilityFromMainRoom = false)
     {
         List<Room> roomListA = new List<Room>();
         List<Room> roomListB = new List<Room>();
@@ -325,7 +318,7 @@ public class MapGenerator3D : MonoBehaviour
         if(DrawDebugPassages)
             DebugLines.Add(new Tuple<Coord, Coord>(tileA, tileB));
 
-        List<Coord> line = GetLine(tileA, tileB);
+        List<Coord> line = GetLineUsingComputeShader(tileA, tileB);
         foreach (Coord temp in line)
             DrawSphere(temp, PassageRadius);
     }
@@ -348,7 +341,7 @@ public class MapGenerator3D : MonoBehaviour
                     }
     }
 
-    private List<Coord> GetLine(Coord start, Coord end)
+    private List<Coord> GetLineUsingComputeShader(Coord start, Coord end)
     {
         List<Coord> line = new List<Coord>();
         int stride = sizeof(int) * 3;
@@ -378,7 +371,7 @@ public class MapGenerator3D : MonoBehaviour
         return line;
     }
 
-    private List<Coord> GetLineOld(Coord start, Coord end)
+    private List<Coord> GetLine(Coord start, Coord end)
     {
         List<Coord> line = new List<Coord>();
 
@@ -529,6 +522,63 @@ public class MapGenerator3D : MonoBehaviour
                 }
 
         Map = NewMap;
+    }
+
+    private void CellularAutomateUsingShader()
+    {
+        int[] Map1D = new int[Width * Height * Depth];
+
+        if (UseRandomSeed)
+            Seed = Time.time.ToString();
+
+        System.Random pseudoRandom = new System.Random(Seed.GetHashCode());
+
+        for (int i = 0; i < Map1D.Length; i++)
+            Map1D[i] = (pseudoRandom.Next(0, 100) < RandomFillPercent) ? 1 : 0;
+
+        int stride = sizeof(int);
+        ComputeBuffer mapBuffer = new ComputeBuffer(Map1D.Length, stride);
+        mapBuffer.SetData(Map1D);
+        CellularAutomataShader.SetBuffer(0, "Map", mapBuffer);
+
+        CellularAutomataShader.SetInt("Width", Width);
+        CellularAutomataShader.SetInt("Height", Height);
+        CellularAutomataShader.SetInt("Depth", Depth);
+        CellularAutomataShader.SetInt("SmoothingFactor", SmoothingFactor);
+        CellularAutomataShader.SetInt("IterationAmount", IterationAmount);
+        CellularAutomataShader.SetInt("RandomFillPercent", RandomFillPercent);
+
+        CellularAutomataShader.Dispatch(0, 10, 1, 1);
+
+        mapBuffer.GetData(Map1D);
+        mapBuffer.Dispose();
+
+        int index = 0;
+
+        for (int x = 0; x < Width; x++)
+            for (int y = 0; y < Height; y++)
+                for (int z = 0; z < Depth; z++)
+                {
+                    Map[x, y, z] = Map1D[index];
+                    index++;
+                }
+    }
+
+    private int[,,] GenerateBorderedMap(int[,,] tempMap)
+    {
+        int[,,] borderedMap = new int[Width + BorderSize * 2, Height + BorderSize * 2, Depth + BorderSize * 2];
+
+        for (int x = 0; x < borderedMap.GetLength(0); x++)
+            for (int y = 0; y < borderedMap.GetLength(1); y++)
+                for (int z = 0; z < borderedMap.GetLength(2); z++)
+                {
+                    if (x >= BorderSize && x < Width + BorderSize && y >= BorderSize && y < Height + BorderSize && z >= BorderSize && z < Depth + BorderSize)
+                        borderedMap[x, y, z] = tempMap[x - BorderSize, y - BorderSize, z - BorderSize];
+                    else
+                        borderedMap[x, y, z] = 1;
+                }
+
+        return borderedMap;
     }
 
     private int GetSurroundingWallCount(int gridX, int gridY, int gridZ)
