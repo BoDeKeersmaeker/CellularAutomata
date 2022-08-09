@@ -1,0 +1,92 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct Coord
+{
+    int tileX;
+    int tileY;
+    int tileZ;
+};
+
+RWStructuredBuffer<Coord> LineBuffer;
+StructuredBuffer<Coord> StartEnd;
+
+int CurrentOutputSize;
+Coord OutputCoord[100];
+
+int CurrentTempSize;
+Coord tempCoord[100];
+
+void BresenhamsAlgorithm(float deltaShortest, float deltaLongA, float deltaLongB, int startShort, int endShort, int startLongA, int startLongB)
+{
+    CurrentTempSize = 0;
+    
+    float deltaErrorY = abs(deltaLongA / deltaShortest);
+    float deltaErrorZ = abs(deltaLongB / deltaShortest);
+    float errorY = 0;
+    float errorZ = 0;
+    int y = startLongA;
+    int z = startLongB;
+
+    for (int x = endShort; x < startShort; x++)
+    {
+        Coord temp;
+        temp.tileX = x;
+        temp.tileY = y;
+        temp.tileZ = z;
+        tempCoord[CurrentTempSize++] = temp;
+
+        errorY += deltaErrorY;
+        while (errorY >= 0.5)
+        {
+            y += sign(deltaLongA);
+            errorY--;
+        }
+
+        errorZ += deltaErrorZ;
+        while (errorZ >= 0.5)
+        {
+            z += sign(deltaLongB);
+            errorZ--;
+        }
+    }
+}
+
+[numthreads(10,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+    for (int i = 0; i < 100; i++)
+    {
+        Coord temp;
+        temp.tileX = -1;
+        temp.tileY = -1;
+        temp.tileZ = -1;
+        OutputCoord[i] = temp;
+    }
+    CurrentOutputSize = 0;
+    
+    float dx = StartEnd[1].tileX - StartEnd[0].tileX;
+    float dy = StartEnd[1].tileY - StartEnd[0].tileY;
+    float dz = StartEnd[1].tileZ - StartEnd[0].tileZ;
+    
+    if (dy < dx && dy < dz)
+    {
+        BresenhamsAlgorithm(dy, dx, dz, StartEnd[0].tileY, StartEnd[1].tileY, StartEnd[0].tileX, StartEnd[0].tileZ);
+        for (int i = 0; i < CurrentTempSize; i++)
+            OutputCoord[CurrentOutputSize++] = tempCoord[i];
+    }
+    else if (dz < dx && dz < dy)
+    {
+        BresenhamsAlgorithm(dz, dy, dx, StartEnd[0].tileZ, StartEnd[1].tileZ, StartEnd[0].tileY, StartEnd[0].tileX);
+        for (int i = 0; i < CurrentTempSize; i++)
+            OutputCoord[CurrentOutputSize++] = tempCoord[i];
+    }
+    else
+    {
+        BresenhamsAlgorithm(dx, dy, dz, StartEnd[0].tileX, StartEnd[1].tileX, StartEnd[0].tileY, StartEnd[0].tileZ);
+        for (int i = 0; i < CurrentTempSize; i++)
+            OutputCoord[CurrentOutputSize++] = tempCoord[i];
+    }
+
+}

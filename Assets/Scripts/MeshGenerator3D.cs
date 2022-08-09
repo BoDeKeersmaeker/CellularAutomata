@@ -34,7 +34,7 @@ public class MeshGenerator3D : MonoBehaviour
         }
     }
 
-    private class CubesGrid
+    private struct CubesGrid
     {
         public Cube[,,] Cubes;
 

@@ -325,10 +325,6 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
-      propertyPath: DrawDebugPassages
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
       propertyPath: RandomFillPercent
       value: 57
       objectReference: {fileID: 0}

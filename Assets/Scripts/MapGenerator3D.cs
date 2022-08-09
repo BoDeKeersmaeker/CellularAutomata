@@ -105,6 +105,9 @@ public class MapGenerator3D : MonoBehaviour
     }
 
     [SerializeField]
+    private ComputeShader BresenhamShader = null;
+
+    [SerializeField]
     private string Seed = "Bo De Keersmaeker";
 
     [SerializeField, Range(0, 1000)]
@@ -346,6 +349,36 @@ public class MapGenerator3D : MonoBehaviour
     }
 
     private List<Coord> GetLine(Coord start, Coord end)
+    {
+        List<Coord> line = new List<Coord>();
+        int stride = sizeof(int) * 3;
+        
+        Coord[] tempCoord = new Coord[1];
+        ComputeBuffer lineBuffer = new ComputeBuffer(tempCoord.Length, stride);
+        lineBuffer.SetData(tempCoord);
+        BresenhamShader.SetBuffer(0, "LineBuffer", lineBuffer);
+
+        Coord[] startEnd = new Coord[2] { start, end };
+        stride = sizeof(int) * 3;
+        ComputeBuffer startEndBuffer = new ComputeBuffer(startEnd.Length, stride);
+        startEndBuffer.SetData(startEnd);
+        BresenhamShader.SetBuffer(0, "StartEnd", startEndBuffer);
+
+        //broke shit
+        BresenhamShader.Dispatch(0, 10, 1, 1);
+
+        lineBuffer.GetData(tempCoord);
+
+        foreach (Coord coord in tempCoord)
+            if(coord.tileX != -1 || coord.tileY != -1 || coord.tileZ != -1)
+                line.Add(new Coord(coord.tileX, coord.tileY, coord.tileZ));
+
+        lineBuffer.Dispose();
+
+        return line;
+    }
+
+    private List<Coord> GetLineOld(Coord start, Coord end)
     {
         List<Coord> line = new List<Coord>();
 

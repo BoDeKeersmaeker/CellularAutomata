@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11633c1f6f7e7d04780a5887ca9c46d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BresenhamShader: {fileID: 7200000, guid: 4547d75c570000b40b6e5e9303c6455b, type: 3}
   Seed: Bo De Keersmaeker
   WallThresholdSize: 50
   RoomThresholdSize: 50
@@ -58,7 +59,8 @@ MonoBehaviour:
   BorderSize: 1
   PassageRadius: 1
   UseRandomSeed: 0
-  DrawDebug: 0
+  DrawDebugPassages: 0
+  DrawDebugMesh: 0
 --- !u!114 &6675970845777058374
 MonoBehaviour:
   m_ObjectHideFlags: 0
