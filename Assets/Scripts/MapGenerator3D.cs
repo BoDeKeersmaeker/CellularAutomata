@@ -147,8 +147,9 @@ public class MapGenerator3D : MonoBehaviour
     private bool DrawDebugPassages = false;
     [SerializeField]
     private bool DrawDebugMesh = false;
-    private List<GameObject> DebugCubes = new List<GameObject>();
-    List<Tuple<Coord, Coord>> DebugLines = new List<Tuple<Coord, Coord>>();
+    private List<GameObject> DebugMeshCubes = new List<GameObject>();
+    List<Tuple<Coord, Coord>> DebugPassageLines = new List<Tuple<Coord, Coord>>();
+    List<Tuple<Coord, Coord>> DebugPassage2Lines = new List<Tuple<Coord, Coord>>();
 
     private void Start()
     {
@@ -158,17 +159,57 @@ public class MapGenerator3D : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-            GenerateMap();
+        //if (Input.GetMouseButtonDown(0))
+        //    GenerateMap();
+
+        //if (Input.GetMouseButtonDown(0))
+        //{
+        //    float tempTime = Time.realtimeSinceStartup;
+
+        //    MeshGenerator3D meshGenerator = GetComponent<MeshGenerator3D>();
+        //    int[,,] temp = GenerateBorderedMap(ref Map);
+        //    meshGenerator.generateMesh(ref temp, SquareSize);
+
+        //    tempTime = Time.realtimeSinceStartup - tempTime;
+        //    print("Mesh generation took: " + tempTime);
+        //}
+
+        //if (Input.GetMouseButtonDown(1))
+        //{
+        //    List<List<Coord>> wallRegions = GetRegions(1);
+
+        //    foreach (List<Coord> wallRegion in wallRegions)
+        //        if (wallRegion.Count < WallThresholdSize)
+        //            foreach (Coord tile in wallRegion)
+        //                Map[tile.tileX, tile.tileY, tile.tileZ] = 0;
+
+        //    List<List<Coord>> roomRegions = GetRegions(0);
+        //    List<Room> survivingRooms = new List<Room>();
+
+        //    foreach (List<Coord> roomRegion in roomRegions)
+        //        if (roomRegion.Count < RoomThresholdSize)
+        //            foreach (Coord tile in roomRegion)
+        //                Map[tile.tileX, tile.tileY, tile.tileZ] = 1;
+        //        else
+        //            survivingRooms.Add(new Room(roomRegion, Map, new MapBoundaries(Width, Depth, Height)));
+
+        //    survivingRooms.Sort();
+        //    survivingRooms[0].IsMainRoom = true;
+        //    survivingRooms[0].IsAccessibleFromMainRoom = true;
+
+        //    List<Room> tempRooms = new List<Room> { survivingRooms[0], survivingRooms[1] };
+        //    if (survivingRooms.Count >= 2)
+        //        ConnectClosestRooms(ref tempRooms);
+        //}
     }
 
     private void GenerateMap()
     {
-        DebugLines.Clear();
+        DebugPassageLines.Clear();
         Map = new int[Width, Height, Depth];
         NewMap = new int[Width, Height, Depth];
 
-        CellularAutomateUsingShader();
+        //CellularAutomateUsingShader();
 
         RandomFillMap();
 
@@ -178,14 +219,15 @@ public class MapGenerator3D : MonoBehaviour
         ProcessMap();
 
         MeshGenerator3D meshGenerator = GetComponent<MeshGenerator3D>();
-        meshGenerator.generateMesh(GenerateBorderedMap(Map), SquareSize);
+        int[,,] temp = GenerateBorderedMap(ref Map);
+        meshGenerator.generateMesh(ref temp, SquareSize);
 
         if (Map != null && DrawDebugMesh)
         {
-            for (int i = 0; i < DebugCubes.Count; i++)
-                Destroy(DebugCubes[i]);
+            for (int i = 0; i < DebugMeshCubes.Count; i++)
+                Destroy(DebugMeshCubes[i]);
 
-            DebugCubes.Clear();
+            DebugMeshCubes.Clear();
 
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.localScale = new Vector3(SquareSize * 0.1f, SquareSize * 0.1f, SquareSize * 0.1f);
@@ -199,7 +241,7 @@ public class MapGenerator3D : MonoBehaviour
                         cube.transform.position = pos;
 
                         if (Map[x, y, z] == 1)
-                            DebugCubes.Add(Instantiate(cube, transform));
+                            DebugMeshCubes.Add(Instantiate(cube, transform));
                     }
 
             Destroy(cube);
@@ -229,10 +271,10 @@ public class MapGenerator3D : MonoBehaviour
         survivingRooms[0].IsMainRoom = true;
         survivingRooms[0].IsAccessibleFromMainRoom = true;
 
-        ConnectClosestRooms(survivingRooms);
+        ConnectClosestRooms(ref survivingRooms);
     }
 
-    private void ConnectClosestRooms(List<Room>  allRooms, bool forceAccessibilityFromMainRoom = false)
+    private void ConnectClosestRooms(ref List<Room>  allRooms, bool forceAccessibilityFromMainRoom = false)
     {
         List<Room> roomListA = new List<Room>();
         List<Room> roomListB = new List<Room>();
@@ -298,27 +340,27 @@ public class MapGenerator3D : MonoBehaviour
             }
 
             if (possibleConnectionFound && !forceAccessibilityFromMainRoom)
-                CreatePassage(closestRoomA, closestRoomB, closestTileA, closestTileB);
+                CreatePassage(ref closestRoomA, ref closestRoomB, closestTileA, closestTileB);
         }
 
         if (possibleConnectionFound && forceAccessibilityFromMainRoom)
         {
-            CreatePassage(closestRoomA, closestRoomB, closestTileA, closestTileB);
-            ConnectClosestRooms(allRooms, true);
+            CreatePassage(ref closestRoomA, ref closestRoomB, closestTileA, closestTileB);
+            ConnectClosestRooms(ref allRooms, true);
         }
 
         if (!forceAccessibilityFromMainRoom)
-            ConnectClosestRooms(allRooms, true);
+            ConnectClosestRooms(ref allRooms, true);
     }
 
-    private void CreatePassage(Room roomA, Room roomB, Coord tileA, Coord tileB)
+    private void CreatePassage(ref Room roomA, ref Room roomB, Coord tileA, Coord tileB)
     {
         Room.ConnectRooms(roomA, roomB);
 
         if(DrawDebugPassages)
-            DebugLines.Add(new Tuple<Coord, Coord>(tileA, tileB));
+            DebugPassageLines.Add(new Tuple<Coord, Coord>(tileA, tileB));
 
-        List<Coord> line = GetLineUsingComputeShader(tileA, tileB);
+        List<Coord> line = GetLine(tileA, tileB);
         foreach (Coord temp in line)
             DrawSphere(temp, PassageRadius);
     }
@@ -383,13 +425,19 @@ public class MapGenerator3D : MonoBehaviour
 
         if (dy < dx && dy < dz)
             foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dy, dx, dz, start.tileY, end.tileY, start.tileX, start.tileZ))
-                line.Add(new Coord(tempCoord.y, tempCoord.x, tempCoord.z));
+                line.Add(new Coord(tempCoord.y, tempCoord.z, tempCoord.x));
         else if (dz < dx && dz < dy)
             foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dz, dy, dx, start.tileZ, end.tileZ, start.tileY, start.tileX))
                 line.Add(new Coord(tempCoord.z, tempCoord.y, tempCoord.x));
         else
             foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dx, dy, dz, start.tileX, end.tileX, start.tileY, start.tileZ))
                 line.Add(new Coord(tempCoord.x, tempCoord.y, tempCoord.z));
+
+        print(line.Count);
+
+        if (DrawDebugPassages && line.Count > 1)
+            DebugPassage2Lines.Add(new Tuple<Coord, Coord>(line[0], line[line.Count-1 ]));
+
 
         return line;
     }
@@ -406,7 +454,14 @@ public class MapGenerator3D : MonoBehaviour
         int y = startLongA;
         int z = startLongB;
 
-        for (int x = endShort; x < startShort; x++)
+        if(endShort < startShort)
+        {
+            int tempInt = startShort;
+            startShort = endShort;
+            endShort = tempInt;
+        }
+
+        for (int x = startShort; x < endShort; x++)
         {
             line.Add(new Vector3Int(x, y, z));
 
@@ -564,7 +619,7 @@ public class MapGenerator3D : MonoBehaviour
                 }
     }
 
-    private int[,,] GenerateBorderedMap(int[,,] tempMap)
+    private int[,,] GenerateBorderedMap(ref int[,,] tempMap)
     {
         int[,,] borderedMap = new int[Width + BorderSize * 2, Height + BorderSize * 2, Depth + BorderSize * 2];
 
@@ -610,9 +665,15 @@ public class MapGenerator3D : MonoBehaviour
     {
         if (DrawDebugPassages)
         {
-            foreach (Tuple<Coord, Coord> debugLine in DebugLines)
+            foreach (Tuple<Coord, Coord> debugLine in DebugPassageLines)
             {
                 Gizmos.color = Color.green;
+                Gizmos.DrawLine(CoordToWorldPoint(debugLine.Item1), CoordToWorldPoint(debugLine.Item2));
+            }
+
+            foreach (Tuple<Coord, Coord> debugLine in DebugPassage2Lines)
+            {
+                Gizmos.color = Color.red;
                 Gizmos.DrawLine(CoordToWorldPoint(debugLine.Item1), CoordToWorldPoint(debugLine.Item2));
             }
         }

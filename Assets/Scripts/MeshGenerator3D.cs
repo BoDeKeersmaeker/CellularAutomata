@@ -198,7 +198,7 @@ public class MeshGenerator3D : MonoBehaviour
     [SerializeField]
     private Material CaveMaterial = null;
 
-    public void generateMesh(int[,,] map, float squareSize)
+    public void generateMesh(ref int[,,] map, float squareSize)
     {
         Outlines.Clear();
         CheckedVertices.Clear();
@@ -220,7 +220,7 @@ public class MeshGenerator3D : MonoBehaviour
                     if (Vertices.Count + 16 >= MaxVecticesPerChunk)
                         CreateNewChunk();
 
-                    TriangulateCube(MainGrid.Cubes[x, y, z]);
+                    TriangulateCube(ref MainGrid.Cubes[x, y, z]);
                 }
 
         CreateNewChunk();
@@ -229,7 +229,7 @@ public class MeshGenerator3D : MonoBehaviour
             chunk.GenerateMesh();
     }
 
-    private void TriangulateCube(Cube cube)
+    private void TriangulateCube(ref Cube cube)
     {
         int[,] triangulationTable = triangulation;
 
