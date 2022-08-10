@@ -415,6 +415,100 @@ public class MapGenerator3D : MonoBehaviour
 
     private List<Coord> GetLine(Coord start, Coord end)
     {
+        List<Vector2Int> tempListXY = BresenhamsAlgorithm(new Vector2Int(start.tileX, start.tileY), new Vector2Int(end.tileX, end.tileY));
+        List<Vector2Int> tempListXZ = BresenhamsAlgorithm(new Vector2Int(start.tileX, start.tileZ), new Vector2Int(end.tileX, end.tileZ));
+
+        List<Coord> line = new List<Coord>();
+
+        if (tempListXY.Count > tempListXZ.Count)
+            for (int i = 0; i < tempListXY.Count; i++)
+            {
+                if (i >= tempListXZ.Count)
+                    line.Add(new Coord(tempListXY[i].x, tempListXY[i].y, tempListXZ[tempListXZ.Count - 1].y));
+                else
+                    line.Add(new Coord(tempListXY[i].x, tempListXY[i].y, tempListXZ[i].y));
+
+                if (DrawDebugPassages && line.Count > 1)
+                    DebugPassage2Lines.Add(new Tuple<Coord, Coord>(line[line.Count - 2], line[line.Count - 1]));
+            }
+        else
+            for (int i = 0; i < tempListXZ.Count; i++)
+            {
+                if (i >= tempListXY.Count)
+                    line.Add(new Coord(tempListXY[tempListXY.Count - 1].x, tempListXY[tempListXY.Count - 1].y, tempListXZ[i].y));
+                else
+                    line.Add(new Coord(tempListXY[i].x, tempListXY[i].y, tempListXZ[i].y));
+
+                if (DrawDebugPassages && line.Count > 1)
+                    DebugPassage2Lines.Add(new Tuple<Coord, Coord>(line[line.Count - 2], line[line.Count - 1]));
+            }
+
+        line.Add(end);
+
+        if (DrawDebugPassages)
+            DebugPassage2Lines.Add(new Tuple<Coord, Coord>(line[line.Count - 2], line[line.Count - 1]));
+
+        return line;
+    }
+
+    private List<Vector2Int> BresenhamsAlgorithm(Vector2Int start, Vector2Int end)
+    {
+        List<Vector2Int> tempList = new List<Vector2Int>();
+
+        int x = start.x;
+        int y = start.y;
+
+        int dx = end.x - start.x;
+        int dy = end.y - start.y;
+
+        bool inverted = false;
+
+        int step = Math.Sign(dx);
+        int gradientStep = Math.Sign(dy);
+
+        int longest = Mathf.Abs(dx);
+        int shortest = Mathf.Abs(dy);
+
+        //longest and shortest because in the case that dy is longer than dx the algorithm would break.
+        if (longest < shortest)
+        {
+            inverted = true;
+            longest = Mathf.Abs(dy);
+            shortest = Mathf.Abs(dx);
+
+            step = Math.Sign(dy);
+            gradientStep = Math.Sign(dx);
+        }
+
+        int gradinetAccumulation = longest / 2;
+
+        for (int i = 0; i < longest; i++)
+        {
+            tempList.Add(new Vector2Int(x, y));
+
+            if (inverted)
+                y += step;
+            else
+                x += step;
+
+            gradinetAccumulation += shortest;
+
+            if (gradinetAccumulation >= longest)
+            {
+                if (inverted)
+                    x += gradientStep;
+                else
+                    y += gradientStep;
+
+                gradinetAccumulation -= longest;
+            }
+        }
+
+        return tempList;
+    }
+
+    private List<Coord> GetLineOld(Coord start, Coord end)
+    {
         List<Coord> line = new List<Coord>();
 
         float dx = end.tileX - start.tileX;
@@ -424,13 +518,13 @@ public class MapGenerator3D : MonoBehaviour
         print("x: " + dx.ToString() + " y: " + dy.ToString() + " z: " + dz.ToString());
 
         if (dy < dx && dy < dz)
-            foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dy, dx, dz, start.tileY, end.tileY, start.tileX, start.tileZ))
+            foreach (Vector3Int tempCoord in BresenhamsAlgorithmOld(dy, dx, dz, start.tileY, end.tileY, start.tileX, start.tileZ))
                 line.Add(new Coord(tempCoord.y, tempCoord.z, tempCoord.x));
         else if (dz < dx && dz < dy)
-            foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dz, dy, dx, start.tileZ, end.tileZ, start.tileY, start.tileX))
+            foreach (Vector3Int tempCoord in BresenhamsAlgorithmOld(dz, dy, dx, start.tileZ, end.tileZ, start.tileY, start.tileX))
                 line.Add(new Coord(tempCoord.z, tempCoord.y, tempCoord.x));
         else
-            foreach (Vector3Int tempCoord in BresenhamsAlgorithm(dx, dy, dz, start.tileX, end.tileX, start.tileY, start.tileZ))
+            foreach (Vector3Int tempCoord in BresenhamsAlgorithmOld(dx, dy, dz, start.tileX, end.tileX, start.tileY, start.tileZ))
                 line.Add(new Coord(tempCoord.x, tempCoord.y, tempCoord.z));
 
         print(line.Count);
@@ -443,7 +537,7 @@ public class MapGenerator3D : MonoBehaviour
     }
 
     //Algorithm that checks all tiles crossed by the line.
-    private List<Vector3Int> BresenhamsAlgorithm(float deltaShortest, float deltaLongA, float deltaLongB, int startShort, int endShort, int startLongA, int startLongB)
+    private List<Vector3Int> BresenhamsAlgorithmOld(float deltaShortest, float deltaLongA, float deltaLongB, int startShort, int endShort, int startLongA, int startLongB)
     {
         List<Vector3Int> line = new List<Vector3Int>();
 
