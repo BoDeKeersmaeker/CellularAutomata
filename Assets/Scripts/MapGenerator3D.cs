@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.UIElements;
 
 public class MapGenerator3D : MonoBehaviour
 {
-    struct Coord
+    public struct Coord
     {
         public int tileX;
         public int tileY;
@@ -16,25 +17,6 @@ public class MapGenerator3D : MonoBehaviour
             tileX = x;
             tileY = y;
             tileZ = z;
-        }
-    }
-
-    struct MapBoundaries
-    { 
-        public int Width;
-        public int Height;
-        public int Depth;
-
-        public MapBoundaries(int width, int height, int depth)
-        {
-            Width = width;
-            Height = height;
-            Depth = depth;
-        }
-
-        public bool IsInMapRange(int x, int y, int z)
-        {
-            return (x >= 0 && x < Width && y >= 0 && y < Height && z >= 0 && z < Depth);
         }
     }
 
@@ -104,6 +86,27 @@ public class MapGenerator3D : MonoBehaviour
         }
     }
 
+    struct MapBoundaries
+    {
+        public int Width;
+        public int Height;
+        public int Depth;
+
+        public MapBoundaries(int width, int height, int depth)
+        {
+            Width = width;
+            Height = height;
+            Depth = depth;
+        }
+
+        public bool IsInMapRange(int x, int y, int z)
+        {
+            return (x >= 0 && x < Width && y >= 0 && y < Height && z >= 0 && z < Depth);
+        }
+    }
+
+    private MapBoundaries Boundaries = new MapBoundaries();
+
     [SerializeField]
     private ComputeShader BresenhamShader = null;
     [SerializeField]
@@ -116,7 +119,7 @@ public class MapGenerator3D : MonoBehaviour
     private float WallThresholdSize = 50;
     [SerializeField, Range(0, 1000)]
     private float RoomThresholdSize = 50;
-    [SerializeField, Range(1f, 1000f)]
+    [SerializeField, Range(0.001f, 1000f)]
     private float SquareSize = 1f;
 
     private int[,,] Map;
@@ -141,6 +144,10 @@ public class MapGenerator3D : MonoBehaviour
 
     [SerializeField]
     private bool UseRandomSeed = false;
+
+    [SerializeField]
+    GameObject Player = null;
+    Coord PlayerSpawn = new Coord();
 
     //Debug variables.
     [SerializeField]
@@ -209,7 +216,7 @@ public class MapGenerator3D : MonoBehaviour
         Map = new int[Width, Height, Depth];
         NewMap = new int[Width, Height, Depth];
 
-        //CellularAutomateUsingShader();
+        Boundaries = new MapBoundaries(Width, Height, Depth);
 
         RandomFillMap();
 
@@ -246,6 +253,10 @@ public class MapGenerator3D : MonoBehaviour
 
             Destroy(cube);
         }
+
+        Vector3 spawnPosition = CoordToWorldPoint(PlayerSpawn);
+        Quaternion spawnRotation = Quaternion.identity;
+        Instantiate(Player, spawnPosition, spawnRotation);
     }
 
     private void ProcessMap()
@@ -365,7 +376,7 @@ public class MapGenerator3D : MonoBehaviour
             DrawSphere(temp, PassageRadius);
     }
 
-    private void DrawSphere(Coord temp, int radius)
+    private void DrawSphere(Coord temp, int radius, int drawValue = 0)
     {
         for (int x = -radius; x < radius; x++)
             for (int y = -radius; y < radius; y++)
@@ -376,10 +387,10 @@ public class MapGenerator3D : MonoBehaviour
                         int tempY = temp.tileY + y;
                         int tempZ = temp.tileZ + z;
 
-                        if (!IsInMapRange(tempX, tempY, tempZ))
+                        if ( !Boundaries.IsInMapRange(tempX, tempY, tempZ))
                             continue;
 
-                        Map[tempX, tempY, tempZ] = 0;
+                        Map[tempX, tempY, tempZ] = drawValue;
                     }
     }
 
@@ -447,6 +458,8 @@ public class MapGenerator3D : MonoBehaviour
 
         if (DrawDebugPassages)
             DebugPassage2Lines.Add(new Tuple<Coord, Coord>(line[line.Count - 2], line[line.Count - 1]));
+
+        PlayerSpawn = line[0];
 
         return line;
     }
@@ -577,9 +590,14 @@ public class MapGenerator3D : MonoBehaviour
         return line;
     }
 
-    private Vector3 CoordToWorldPoint(Coord tile)
+    public Vector3 CoordToWorldPoint(Coord tile)
     {
-        return new Vector3(-Width / 2f + .5f + tile.tileX, -Depth / 2f + .5f + tile.tileZ, -Height / 2 + .5f + tile.tileY);
+        return new Vector3((-Width / 2f + .5f + tile.tileX) * SquareSize, (-Depth / 2f + .5f + tile.tileZ) * SquareSize, (-Height / 2 + .5f + tile.tileY) * SquareSize);
+    }
+
+    public Coord WorldPointToCoord(Vector3 position)
+    {
+        return new Coord((int)((position.x - transform.position.x + Width / 2.5f) / SquareSize), (int)((position.z - transform.position.z + Depth / 2.5f) / SquareSize), (int)((position.y - transform.position.y + Height / 2.5f) / SquareSize));
     }
 
     private List<List<Coord>> GetRegions(int tileType)
@@ -621,7 +639,7 @@ public class MapGenerator3D : MonoBehaviour
                 for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
                     for (int z = tile.tileZ - 1; z <= tile.tileZ + 1; z++)
                     {
-                        if (!IsInMapRange(x, y, z) || (y != tile.tileY && x != tile.tileX && z != tile.tileZ))
+                        if (!Boundaries.IsInMapRange(x, y, z) || (y != tile.tileY && x != tile.tileX && z != tile.tileZ))
                             continue;
 
                         if (mapFlags[x, y, z] == 0 && Map[x, y, z] == tileType)
@@ -741,7 +759,7 @@ public class MapGenerator3D : MonoBehaviour
                     if (neighbourX == gridX && neighbourY == gridY && neighbourZ == gridZ)
                         continue;
 
-                    if (!IsInMapRange(neighbourX, neighbourY, neighbourZ))
+                    if (!Boundaries.IsInMapRange(neighbourX, neighbourY, neighbourZ))
                         wallCount++;
                     else if (Map[neighbourX, neighbourY, neighbourZ] == 1)
                         wallCount += Map[neighbourX, neighbourY, neighbourZ];
@@ -750,9 +768,23 @@ public class MapGenerator3D : MonoBehaviour
         return wallCount;
     }
 
-    private bool IsInMapRange(int x, int y, int z)
+    public void MineBlock(Vector3 worldPos)
     {
-        return (x >= 0 && x < Width && y >= 0 && y < Height && z >= 0 && z < Depth);
+        Coord tempCoord = WorldPointToCoord(worldPos);
+        tempCoord.tileX -= 2;
+        tempCoord.tileY -= 2;
+        tempCoord.tileZ -= 2;
+
+        print("Map coords x: " + tempCoord.tileX + ", y: " + tempCoord.tileY + ", z: " + tempCoord.tileZ);
+        if (Boundaries.IsInMapRange(tempCoord.tileX, tempCoord.tileY, tempCoord.tileZ))
+        {
+            DrawSphere(tempCoord, 3, 0);
+            MeshGenerator3D meshGenerator = GetComponent<MeshGenerator3D>();
+            int[,,] tempMap = GenerateBorderedMap(ref Map);
+            meshGenerator.generateMesh(ref tempMap, SquareSize);
+        }
+        else
+            print("mine spot outside of map");
     }
 
     private void OnDrawGizmos()

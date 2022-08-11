@@ -142,6 +142,8 @@ public class MeshGenerator3D : MonoBehaviour
 
     private class Chunk
     {
+        public static int NextChunkID = 1;
+
         private List<Vector3> Vertices = null;
         private List<int> Triangles = null;
 
@@ -149,6 +151,8 @@ public class MeshGenerator3D : MonoBehaviour
         private MeshFilter ChunkMesh = null;
         private MeshRenderer ChunkRenderer = null;
         private Material CaveMaterial = null;
+
+        private int ChunkID = -1;
 
         public Chunk(List<Vector3> vertices, List<int> triangles, Transform owner, Material caveMaterial)
         {
@@ -161,6 +165,10 @@ public class MeshGenerator3D : MonoBehaviour
             ChunkObject.transform.parent = owner;
             ChunkMesh = ChunkObject.AddComponent<MeshFilter>();
             ChunkRenderer = ChunkObject.AddComponent<MeshRenderer>();
+
+            ChunkID = NextChunkID++;
+            ChunkScript tempScript = ChunkObject.AddComponent<ChunkScript>();
+            tempScript.SetOwningChunkID(ChunkID);
         }
 
         public void GenerateMesh()
@@ -172,11 +180,27 @@ public class MeshGenerator3D : MonoBehaviour
             mesh.vertices = Vertices.ToArray();
             mesh.triangles = Triangles.ToArray();
             mesh.RecalculateNormals();
+
+            MeshCollider CaveCollider = ChunkObject.AddComponent<MeshCollider>();
+            CaveCollider.sharedMesh = mesh;
         }
 
         public void DestroyChunk()
         {
             Destroy(ChunkObject);
+        }
+
+        public int GetChunkID()
+        {
+            return ChunkID;
+        }
+
+        public void RecalculateChunk(List<Vector3> vertices, List<int> triangles)
+        {
+            Vertices = vertices;
+            Triangles = triangles;
+
+            GenerateMesh();
         }
     }
 
@@ -194,20 +218,16 @@ public class MeshGenerator3D : MonoBehaviour
     private CubesGrid MainGrid;
 
     [SerializeField, Range(3, 65535)]
-    private int MaxVecticesPerChunk = 65535;
+    private int MaxVecticesPerChunk = 65000;
+
     [SerializeField]
     private Material CaveMaterial = null;
 
     public void generateMesh(ref int[,,] map, float squareSize)
     {
-        Outlines.Clear();
-        CheckedVertices.Clear();
-        TriangleDictionary.Clear();
-
         MainGrid = new CubesGrid(map, squareSize);
 
-        Vertices = new List<Vector3>();
-        Triangles = new List<int>();
+        ClearBuffers();
 
         foreach (Chunk chunk in Chunks)
             chunk.DestroyChunk();
@@ -224,7 +244,7 @@ public class MeshGenerator3D : MonoBehaviour
                 }
 
         CreateNewChunk();
-        
+
         foreach (Chunk chunk in Chunks)
             chunk.GenerateMesh();
     }
@@ -284,17 +304,29 @@ public class MeshGenerator3D : MonoBehaviour
     private void CreateNewChunk()
     {
         Chunks.Add(new Chunk(Vertices, Triangles, transform, CaveMaterial));
+        ClearBuffers();
+    }
 
+    private Chunk GetChunk(int chunkID)
+    {
+        foreach (Chunk chunk in Chunks)
+            if (chunk.GetChunkID() == chunkID)
+                return chunk;
+
+        return null;
+    }
+
+    private void ClearBuffers()
+    {
         Vertices = new List<Vector3>();
         Triangles = new List<int>();
 
         Outlines.Clear();
         CheckedVertices.Clear();
         TriangleDictionary.Clear();
-    }    
+    }
 
     // Values from http://paulbourke.net/geometry/polygonise/
-
     int[,] triangulation = new int[256,16]{
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
     { 0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },

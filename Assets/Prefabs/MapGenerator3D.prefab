@@ -60,6 +60,7 @@ MonoBehaviour:
   BorderSize: 1
   PassageRadius: 1
   UseRandomSeed: 0
+  Player: {fileID: 841703552654046258, guid: 94bcba13d2ed5ae46aae45092eb5db4c, type: 3}
   DrawDebugPassages: 0
   DrawDebugMesh: 0
 --- !u!114 &6675970845777058374
@@ -74,5 +75,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 088ba74bcd3532940a92c1a0441529b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxVecticesPerChunk: 65535
+  MaxVecticesPerChunk: 65000
   CaveMaterial: {fileID: 2100000, guid: fd6a59c47d1819345a95e04ca9b11258, type: 2}
