@@ -242,15 +242,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
       propertyPath: SquareSize
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
       propertyPath: PassageRadius
       value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6675970845777058368, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
-      propertyPath: DrawDebugPassages
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6675970845777058369, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
       propertyPath: m_RootOrder
@@ -302,7 +298,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6675970845777058374, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}
       propertyPath: MaxVecticesPerChunk
-      value: 65000
+      value: 6500
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cc259f18871c3fc4b9c2779f780840fc, type: 3}

@@ -28,7 +28,10 @@ public class Player3D : MonoBehaviour
     private float MaxCamaeraPitch = 80f;
 
     [SerializeField]
-    private float MaxMiningRange = 10f;
+    private float MaxMiningRange = 25f;
+
+    [SerializeField]
+    private int MiningRadius = 1;
 
     // Start is called before the first frame update
     void Start()
@@ -38,6 +41,9 @@ public class Player3D : MonoBehaviour
 
         if (!RigidBody)
             RigidBody = gameObject.AddComponent<Rigidbody>();
+
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     // Update is called once per frame
@@ -92,13 +98,8 @@ public class Player3D : MonoBehaviour
 
                 ChunkScript script = hitObject.GetComponent<ChunkScript>();
                 if (script)
-                {
-                    print("Worldpos: " + hitData.point);
-                    script.MineNode(hitData.point);
-                }
+                    script.MineNode(hitData.point, MiningRadius, MainCamera.transform.forward);
             }
-            else
-                print("Raycast failed");
         }
     }
 }

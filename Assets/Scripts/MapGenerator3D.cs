@@ -150,13 +150,17 @@ public class MapGenerator3D : MonoBehaviour
     Coord PlayerSpawn = new Coord();
 
     //Debug variables.
+    private List<GameObject> DebugMeshCubes = new List<GameObject>();
+    List<Tuple<Coord, Coord>> DebugPassageLines = new List<Tuple<Coord, Coord>>();
+    List<Tuple<Coord, Coord>> DebugPassage2Lines = new List<Tuple<Coord, Coord>>();
+    [SerializeField]
+    private float DebugCubeSize = 0.75f;
     [SerializeField]
     private bool DrawDebugPassages = false;
     [SerializeField]
     private bool DrawDebugMesh = false;
-    private List<GameObject> DebugMeshCubes = new List<GameObject>();
-    List<Tuple<Coord, Coord>> DebugPassageLines = new List<Tuple<Coord, Coord>>();
-    List<Tuple<Coord, Coord>> DebugPassage2Lines = new List<Tuple<Coord, Coord>>();
+    [SerializeField]
+    private bool DrawMiningDebug = false;
 
     private void Start()
     {
@@ -237,14 +241,14 @@ public class MapGenerator3D : MonoBehaviour
             DebugMeshCubes.Clear();
 
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.localScale = new Vector3(SquareSize * 0.1f, SquareSize * 0.1f, SquareSize * 0.1f);
+            cube.transform.localScale = new Vector3(SquareSize * DebugCubeSize, SquareSize * DebugCubeSize, SquareSize * DebugCubeSize);
             cube.GetComponent<Renderer>().material.color = Color.black;
 
             for (int x = 0; x < Width; x++)
                 for (int y = 0; y < Height; y++)
                     for (int z = 0; z < Depth; z++)
                     {
-                        Vector3 pos = new Vector3(-Width / 2f + x + .5f, -Depth / 2f + z + .5f, -Height / 2f + y + .5f);
+                        Vector3 pos = CoordToWorldPoint(new Coord(x, y, z));
                         cube.transform.position = pos;
 
                         if (Map[x, y, z] == 1)
@@ -597,7 +601,7 @@ public class MapGenerator3D : MonoBehaviour
 
     public Coord WorldPointToCoord(Vector3 position)
     {
-        return new Coord((int)((position.x - transform.position.x + Width / 2.5f) / SquareSize), (int)((position.z - transform.position.z + Depth / 2.5f) / SquareSize), (int)((position.y - transform.position.y + Height / 2.5f) / SquareSize));
+        return new Coord((int)((position.x / SquareSize) - transform.position.x + Width / 2.5f), (int)((position.z / SquareSize) - transform.position.z + Depth / 2.5f), (int)((position.y / SquareSize) - transform.position.y + Height / 2.5f));
     }
 
     private List<List<Coord>> GetRegions(int tileType)
@@ -768,23 +772,34 @@ public class MapGenerator3D : MonoBehaviour
         return wallCount;
     }
 
-    public void MineBlock(Vector3 worldPos)
+    public void MineBlock(Vector3 worldPos, int miningRadius, Vector3 direction)
     {
-        Coord tempCoord = WorldPointToCoord(worldPos);
-        tempCoord.tileX -= 2;
-        tempCoord.tileY -= 2;
-        tempCoord.tileZ -= 2;
+        //Extend the hitposition a little bit deeper to not hit exactly on the edge between nodes.
+        worldPos += (direction * 0.3f ) * SquareSize;
 
-        print("Map coords x: " + tempCoord.tileX + ", y: " + tempCoord.tileY + ", z: " + tempCoord.tileZ);
+        Coord tempCoord = WorldPointToCoord(worldPos);
+        tempCoord.tileX -= (1 + miningRadius / 2);
+        tempCoord.tileY -= (2 + miningRadius / 2);
+        tempCoord.tileZ -= (1 + miningRadius / 2);
+
         if (Boundaries.IsInMapRange(tempCoord.tileX, tempCoord.tileY, tempCoord.tileZ))
         {
-            DrawSphere(tempCoord, 3, 0);
+            DrawSphere(tempCoord, miningRadius, 0);
             MeshGenerator3D meshGenerator = GetComponent<MeshGenerator3D>();
             int[,,] tempMap = GenerateBorderedMap(ref Map);
             meshGenerator.generateMesh(ref tempMap, SquareSize);
+
+            if (DrawMiningDebug)
+            {
+                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cube.transform.localScale = new Vector3(SquareSize * DebugCubeSize, SquareSize * DebugCubeSize, SquareSize * DebugCubeSize);
+                cube.GetComponent<Renderer>().material.color = Color.yellow;
+
+                Vector3 pos = CoordToWorldPoint(tempCoord);
+                cube.transform.position = pos;
+                DebugMeshCubes.Add(Instantiate(cube, transform));
+            }
         }
-        else
-            print("mine spot outside of map");
     }
 
     private void OnDrawGizmos()

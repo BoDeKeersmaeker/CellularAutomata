@@ -27,8 +27,8 @@ public class ChunkScript : MonoBehaviour
         OwningChunkID = chunkID;
     }
 
-    public void MineNode(Vector3 worldPos)
+    public void MineNode(Vector3 worldPos, int miningRadius, Vector3 direction)
     {
-        MapGeneratorScript.MineBlock(worldPos);
+        MapGeneratorScript.MineBlock(worldPos, miningRadius, direction);
     }
 }
