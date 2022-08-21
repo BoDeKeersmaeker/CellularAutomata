@@ -132,7 +132,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1307686923740434888, guid: 97df582a557db994282fcd78ebb82826, type: 3}
       propertyPath: DrawDebug
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1307686923740434888, guid: 97df582a557db994282fcd78ebb82826, type: 3}
       propertyPath: PassageRadius

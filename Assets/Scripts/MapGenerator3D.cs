@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using UnityEngine.UIElements;
+using Unity.VisualScripting;
 
 public class MapGenerator3D : MonoBehaviour
 {
@@ -113,6 +114,8 @@ public class MapGenerator3D : MonoBehaviour
     private ComputeShader CellularAutomataShader = null;
 
     [SerializeField]
+    private bool UseRandomSeed = false;
+    [SerializeField]
     private string Seed = "Bo De Keersmaeker";
 
     [SerializeField, Range(0, 1000)]
@@ -142,9 +145,9 @@ public class MapGenerator3D : MonoBehaviour
     [SerializeField, Range(1, 100)]
     private int PassageRadius = 1;
 
-    [SerializeField]
-    private bool UseRandomSeed = false;
 
+    [SerializeField]
+    bool SpawnPlayer = true;
     [SerializeField]
     GameObject Player = null;
     Coord PlayerSpawn = new Coord();
@@ -233,34 +236,9 @@ public class MapGenerator3D : MonoBehaviour
         int[,,] temp = GenerateBorderedMap(ref Map);
         meshGenerator.generateMesh(ref temp, SquareSize);
 
-        if (Map != null && DrawDebugMesh)
-        {
-            for (int i = 0; i < DebugMeshCubes.Count; i++)
-                Destroy(DebugMeshCubes[i]);
+        SpawnCamera();
 
-            DebugMeshCubes.Clear();
-
-            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.localScale = new Vector3(SquareSize * DebugCubeSize, SquareSize * DebugCubeSize, SquareSize * DebugCubeSize);
-            cube.GetComponent<Renderer>().material.color = Color.black;
-
-            for (int x = 0; x < Width; x++)
-                for (int y = 0; y < Height; y++)
-                    for (int z = 0; z < Depth; z++)
-                    {
-                        Vector3 pos = CoordToWorldPoint(new Coord(x, y, z));
-                        cube.transform.position = pos;
-
-                        if (Map[x, y, z] == 1)
-                            DebugMeshCubes.Add(Instantiate(cube, transform));
-                    }
-
-            Destroy(cube);
-        }
-
-        Vector3 spawnPosition = CoordToWorldPoint(PlayerSpawn);
-        Quaternion spawnRotation = Quaternion.identity;
-        Instantiate(Player, spawnPosition, spawnRotation);
+        DrawDebug();
     }
 
     private void ProcessMap()
@@ -282,11 +260,14 @@ public class MapGenerator3D : MonoBehaviour
             else
                 survivingRooms.Add(new Room(roomRegion, Map, new MapBoundaries(Width, Depth, Height)));
 
-        survivingRooms.Sort();
-        survivingRooms[0].IsMainRoom = true;
-        survivingRooms[0].IsAccessibleFromMainRoom = true;
+        if (survivingRooms.Count >= 1)
+        {
+            survivingRooms.Sort();
+            survivingRooms[0].IsMainRoom = true;
+            survivingRooms[0].IsAccessibleFromMainRoom = true;
 
-        ConnectClosestRooms(ref survivingRooms);
+            ConnectClosestRooms(ref survivingRooms);
+        }
     }
 
     private void ConnectClosestRooms(ref List<Room>  allRooms, bool forceAccessibilityFromMainRoom = false)
@@ -799,6 +780,54 @@ public class MapGenerator3D : MonoBehaviour
                 cube.transform.position = pos;
                 DebugMeshCubes.Add(Instantiate(cube, transform));
             }
+        }
+    }
+
+    public void SpawnCamera()
+    {
+        if (SpawnPlayer)
+        {
+            Vector3 spawnPosition = CoordToWorldPoint(PlayerSpawn);
+            Quaternion spawnRotation = Quaternion.identity;
+            Instantiate(Player, spawnPosition, spawnRotation);
+        }
+        else
+        {
+            GameObject cameraObject = new GameObject("CameraObject");
+            cameraObject.AddComponent<Camera>();
+            Vector3 cameraPosition = new Vector3(0f, 27f, 0f);
+            Quaternion cameraRotation = new Quaternion(0.707106829f, 0f, 0f, 0.707106829f);
+
+            cameraObject.transform.localPosition = cameraPosition;
+            cameraObject.transform.localRotation = cameraRotation;
+        }
+    }
+
+    private void DrawDebug()
+    {
+        if (Map != null && DrawDebugMesh)
+        {
+            for (int i = 0; i < DebugMeshCubes.Count; i++)
+                Destroy(DebugMeshCubes[i]);
+
+            DebugMeshCubes.Clear();
+
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.transform.localScale = new Vector3(SquareSize * DebugCubeSize, SquareSize * DebugCubeSize, SquareSize * DebugCubeSize);
+            cube.GetComponent<Renderer>().material.color = Color.black;
+
+            for (int x = 0; x < Width; x++)
+                for (int y = 0; y < Height; y++)
+                    for (int z = 0; z < Depth; z++)
+                    {
+                        Vector3 pos = CoordToWorldPoint(new Coord(x, y, z));
+                        cube.transform.position = pos;
+
+                        if (Map[x, y, z] == 0)
+                            DebugMeshCubes.Add(Instantiate(cube, transform));
+                    }
+
+            Destroy(cube);
         }
     }
 

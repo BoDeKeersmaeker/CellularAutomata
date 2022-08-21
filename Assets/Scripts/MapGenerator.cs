@@ -160,9 +160,9 @@ public class MapGenerator : MonoBehaviour
     {
         List<List<Coord>> wallRegions = GetRegions(1);
 
-        foreach(List<Coord> wallRegion in wallRegions)
-            if(wallRegion.Count < WallThresholdSize)
-                foreach(Coord tile in wallRegion)
+        foreach (List<Coord> wallRegion in wallRegions)
+            if (wallRegion.Count < WallThresholdSize)
+                foreach (Coord tile in wallRegion)
                     Map[tile.tileX, tile.tileY] = 0;
 
         List<List<Coord>> roomRegions = GetRegions(0);
@@ -475,13 +475,13 @@ public class MapGenerator : MonoBehaviour
         //        }
         //    }
 
-        if (DrawDebug)
-        {
-            foreach (Tuple<Coord, Coord> debugLine in DebugLines)
-            {
-                Gizmos.color = Color.green;
-                Gizmos.DrawLine(CoordToWorldPoint(debugLine.Item1), CoordToWorldPoint(debugLine.Item2));
-            }
-        }
+        //if (DrawDebug)
+        //{
+        //    foreach (Tuple<Coord, Coord> debugLine in DebugLines)
+        //    {
+        //        Gizmos.color = Color.green;
+        //        Gizmos.DrawLine(CoordToWorldPoint(debugLine.Item1), CoordToWorldPoint(debugLine.Item2));
+        //    }
+        //}
     }
 }
